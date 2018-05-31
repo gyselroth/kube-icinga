@@ -1,0 +1,58 @@
+{
+  "name": "kube-icinga",
+  "version": "1.0.0",
+  "description": "Icinga2 autodiscovery service for kubernetes",
+  "main": "main.js",
+  "scripts": {
+    "prebuild": "tsc",
+    "start": "tsc && nodejs build/main.js",
+    "build": "eslint  --fix src/ --ext ts && tsc && jest",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/raffis/kube-icinga.git"
+  },
+  "keywords": [
+    "icinga2",
+    "kubernetes",
+    "kube",
+    "autodiscovery"
+  ],
+  "author": "Raffael Sahli <sahli@gyselroth.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/raffis/kube-icinga/issues"
+  },
+  "homepage": "https://github.com/raffis/kube-icinga#readme",
+  "dependencies": {
+    "icinga2-api": "raffis/nodejs-icinga2api",
+    "json-stream": "^1.0.0",
+    "kubernetes-client": "^5.3.0",
+    "winston": "^3.0.0-rc5"
+  },
+  "devDependencies": {
+    "@types/jest": "^22.2.3",
+    "@types/node": "^10.1.2",
+    "eslint": "^4.19.1",
+    "eslint-config-google": "^0.9.1",
+    "jest": "^23.0.1",
+    "source-map-support": "^0.5.6",
+    "ts-jest": "^22.4.6",
+    "typescript": "^2.8.3",
+    "typescript-eslint-parser": "^15.0.0"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.tsx?$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    },
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json"
+    ]
+  }
+}

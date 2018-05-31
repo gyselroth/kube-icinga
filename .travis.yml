@@ -1,0 +1,16 @@
+sudo: required
+services:
+  - docker
+language: node_js
+node_js:
+  - "8"
+cache:
+  directories:
+    - "node_modules"
+after_success:
+  - test "$TRAVIS_TAG" != "" && version=${TRAVIS_TAG:1}; 
+  - test "$TRAVIS_TAG" != "" && docker build -t gyselroth/kube-icinga:$version .
+  - test "$TRAVIS_TAG" != "" && docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+  - test "$TRAVIS_TAG" != "" && docker tag gyselroth/kube-icinga:$version gyselroth/kube-ldap:latest
+  - test "$TRAVIS_TAG" != "" && docker push gyselroth/kube-icinga:$version
+  - test "$TRAVIS_TAG" != "" && docker push gyselroth/kube-icinga:latest

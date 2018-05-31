@@ -1,0 +1,57 @@
+{
+  "logger": {
+    "level": "info"
+  },
+  "cleanup": true,
+  "icinga": {
+    "address": "",
+    "port": 5665,
+    "apiUser": "",
+    "apiPassword": ""
+  },
+  "kubernetes": {
+    "nodes": {
+      "discover": true,
+      "hostDefinition": {},
+      "hostTemplates": ["generic-host"]
+    },
+    "ingresses": {
+      "discover": true,
+      "serviceDefiniton": {},
+      "hostDefinition": {},
+      "serviceTemplates": ["generic-service"],
+      "hostTemplates": ["generic-host"],
+      "applyServices": true,
+      "attachToNodes": false
+    },
+    "services": {
+      "ClusterIP": {
+        "discover": false,
+        "hostDefinition": {},
+        "serviceTemplates": ["generic-service"],
+        "hostTemplates": ["generic-host"],
+        "applyServices": false,
+        "portNameAsCommand": true
+      },
+      "NodePort": {
+        "discover": true,
+        "serviceDefiniton": {},
+        "hostDefinition": {},
+        "serviceTemplates": ["generic-service"],
+        "hostTemplates": ["generic-host"],
+        "applyServices": false,
+        "portNameAsCommand": true,
+        "attachToNodes": false
+      },
+      "LoadBalancer": {
+        "discover": true,
+        "serviceDefiniton": {},
+        "hostDefinition": {},
+        "serviceTemplates": ["generic-service"],
+        "hostTemplates": ["generic-host"],
+        "applyServices": false,
+        "portNameAsCommand": true
+      }
+    }
+  }
+}
