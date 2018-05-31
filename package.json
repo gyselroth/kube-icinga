@@ -7,7 +7,8 @@
     "prebuild": "tsc",
     "start": "tsc && nodejs build/main.js",
     "build": "eslint  --fix src/ --ext ts && tsc && jest --coverage",
-    "test": "jest --coverage"
+    "test": "jest --coverage",
+    "coveralls": "coveralls < coverage/lcov.info"
   },
   "repository": {
     "type": "git",
@@ -34,6 +35,7 @@
   "devDependencies": {
     "@types/jest": "^22.2.3",
     "@types/node": "^10.1.2",
+    "coveralls": "^3.0.1",
     "eslint": "^4.19.1",
     "eslint-config-google": "^0.9.1",
     "jest": "^23.0.1",

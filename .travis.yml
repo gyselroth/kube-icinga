@@ -4,6 +4,10 @@ services:
 language: node_js
 node_js:
   - "8"
+script:
+  - npm install
+  - npm run build
+  - npm run coveralls
 cache:
   directories:
     - "node_modules"
