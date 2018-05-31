@@ -9,7 +9,7 @@ try {
 
 const config = {
   logger: {
-    level: process.env.LOGGER_LEVEL || defaultConfig.logger.level || 'debug',
+    level: process.env.LOGGER_LEVEL || defaultConfig.logger.level || 'info',
   },
   cleanup: process.env.CLEANUP || defaultConfig.cleanup || true,
   icinga: {
@@ -54,7 +54,7 @@ const config = {
         attachToNodes: process.env.KUBERNETES_SERVICES_NODEPORT_ATTACHTONODES || defaultConfig.kubernetes.services.NodePort.attachToNodes || true,
       },
       LoadBalancer: {
-        discover: process.env.KUBERNETES_SERVICES_LOADBALANCER_DISCOVER || defaultConfig.kubernetes.services.LoadBalancer.discover || false,
+        discover: process.env.KUBERNETES_SERVICES_LOADBALANCER_DISCOVER || defaultConfig.kubernetes.services.LoadBalancer.discover || true,
         applyServices: process.env.KUBERNETES_SERVICES_LOADBALANCER_APPLYSERVICES || defaultConfig.kubernetes.services.LoadBalancer.applyServices || true,
         serviceDefinition: process.env.KUBERNETES_SERVICES_LOADBALANCER_SERVICE_DEFINITION || defaultConfig.kubernetes.services.LoadBalancer.serviceDefinition || {},
         hostDefinition: process.env.KUBERNETES_SERVICES_LOADBALANCER_HOST_DEFINITION || defaultConfig.kubernetes.services.LoadBalancer.hostDefinition || {},
