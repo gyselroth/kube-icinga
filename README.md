@@ -169,7 +169,7 @@ List of configurable values:
 
 |Setting|Description|Environment Variable| Default Value|
 |-------|-----------|--------------------|--------------|
-|`logger.level`|Loglevel for winston logger|`LOG_LEVEL`|`debug`|
+|`log.level`|Loglevel for winston logger|`LOG_LEVEL`|`info`|
 |`icinga.address`|Icinga2 address|`ICINGA_ADDRESS`|`127.0.01`|
 |`icinga.port`|Icinga2 API port|`ICINGA_PORT`|`5665`|
 |`icinga.apiUser`|Icinga2 API username|`ICINGA_API_USERNAME`|`admin`|

@@ -8,8 +8,8 @@ try {
 }
 
 const config = {
-  logger: {
-    level: process.env.LOGGER_LEVEL || defaultConfig.logger.level || 'info',
+  log: {
+    level: process.env.LOG_LEVEL || defaultConfig.log.level || 'info',
   },
   cleanup: process.env.CLEANUP || defaultConfig.cleanup || true,
   icinga: {

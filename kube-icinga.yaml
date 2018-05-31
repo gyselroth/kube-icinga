@@ -28,12 +28,24 @@ metadata:
   labels:
     k8s-app: kube-icinga
 rules:
-- apiGroups: [""] # "" indicates the core API group
+- apiGroups:
+  - ""
+  - extensions
   resources:
   - namespaces
   - ingresses
   - services
   - nodes
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups:
+  - extensions
+  - ""
+  resources:
+  - ingresses
+  - ingresses/status
   verbs:
   - get
   - watch
