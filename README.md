@@ -1,6 +1,7 @@
 # kube-icinga
 [![Build Status](https://travis-ci.org/gyselroth/kube-icinga.svg)](https://travis-ci.org/gyselroth/kube-icinga)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub release](https://img.shields.io/github/release/gyselroth/kube-icinga.svg)](https://github.com/gyselroth/kube-icinga/releases)
 
 ## Description
 kube-icinga will automatically deploy icinga objects to monitor your kubernetes services.
@@ -23,6 +24,18 @@ if the service can not be attached to kubernetes nodes.
 
 You may wonder where your pods are in this setup. Well it does not make any sense to monitor single pods. Pods are mortal and (always) moving. The important thing is to monitor your services as an entity.
 
+## Table of Contents
+* [Description](#description)
+* [How does it work?](#how-does-it-work)
+* [Requirements](#requirements)
+* [Setup icinga2 api user](#setup-icinga2-api-user)
+* [Deployment](#deployment)
+* [Configuration](#configuration)
+* [Advanced topics](#advanced-topics)
+  * [ClusterIP services](#clusterip-services)
+  * [Using icinga2 apply rules](#using-icinga2-apply-rules)
+  * [Overwite specific icinga object definition](#overwite-specific-icinga-object-definition)
+
 ## Requirements
 * A running kubernetes cluster (or minikube)
 * Icinga2 server with enabled API module
@@ -33,8 +46,8 @@ You can either create it manually or using the icinga2 command utility.
 
  ```sh
 icinga2 api user --user kube-icinga --password kube-icinga
- ```
->**Note** Use another password!
+```
+Use another password!
 
 
 ## Deployment
