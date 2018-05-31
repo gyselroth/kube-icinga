@@ -6,8 +6,8 @@
   "scripts": {
     "prebuild": "tsc",
     "start": "tsc && nodejs build/main.js",
-    "build": "eslint  --fix src/ --ext ts && tsc && jest",
-    "test": "jest"
+    "build": "eslint  --fix src/ --ext ts && tsc && jest --coverage",
+    "test": "jest --coverage"
   },
   "repository": {
     "type": "git",
