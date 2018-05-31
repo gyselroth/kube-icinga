@@ -59,7 +59,6 @@ The kubernetes deployment can simply be added like this:
 kubectl -f https://raw.githubusercontent.com/gyselroth/kube-icinga/master/kube-icinga.yaml
 ```
 (Change the secret password and ICINGA_ADDRESS value accordingly)
-```
 
 ## Configuration
 kube-icinga itself can be configured via environment variables however you may also deploy and change the `config.json` file instead of environement variables.
