@@ -1,5 +1,6 @@
 # kube-icinga
 [![Build Status](https://travis-ci.org/gyselroth/kube-icinga.svg)](https://travis-ci.org/gyselroth/kube-icinga)
+[![Coverage Status](https://coveralls.io/repos/github/gyselroth/kube-icinga/badge.svg?branch=master)](https://coveralls.io/github/gyselroth/kube-icinga?branch=master)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub release](https://img.shields.io/github/release/gyselroth/kube-icinga.svg)](https://github.com/gyselroth/kube-icinga/releases)
 
