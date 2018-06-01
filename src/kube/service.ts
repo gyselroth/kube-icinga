@@ -124,16 +124,17 @@ export default class Service {
         }
 
         if (!service) {
-          let name = servicePort.name || servicePort.protocol+':'+servicePort.port;
+          let protocol = servicePort.protocol.toLowerCase();
+          let name = servicePort.name || protocol+':'+servicePort.port;
           service = {
-            'check_command': servicePort.protocol.toLowerCase(),
+            'check_command': servicePort.protocol,
             'display_name': name.toLowerCase(),
             'vars._kubernetes': true,
             'vars.kubernetes': definition,
             'groups': [definition.metadata.namespace],
           };
 
-          service['vars.'+servicePort.protocol+'_port'] = servicePort.nodePort || servicePort.port;
+          service['vars.'+protocol+'_port'] = servicePort.nodePort || servicePort.port;
         }
 
         Object.assign(service, options.serviceDefinition);
@@ -152,7 +153,13 @@ export default class Service {
       this.jsonStream.on('data', async (object) => {
         this.logger.debug('received kubernetes service', {object});
 
+        if(object.object.kind !== 'Service') {
+          this.logger.error('skip invalid service object', {object: object});
+          return;
+        }
+
         if (!this.options[object.object.spec.type].discover) {
+          this.logger.debug('skip service object, since ['+object.object.spec.type+'] is not enabled for discovery', {object: object});
           return;
         }
 
@@ -169,7 +176,7 @@ export default class Service {
         this.kubeListener();
       });
     } catch (err) {
-      this.logger.emerg('failed start services listener', {error: err});
+      this.logger.error('failed start services listener', {error: err});
     }
   }
 }

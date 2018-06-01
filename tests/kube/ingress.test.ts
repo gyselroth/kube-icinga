@@ -2,12 +2,12 @@ import Ingress from '../../src/kube/ingress';
 import Node from '../../src/kube/node'; 
 import Icinga from '../../src/icinga';
 import {LoggerInstance} from 'winston'; 
-import JSONStream from 'json-stream';
+import * as JSONStream from 'json-stream';
 const KubeApi = require('kubernetes-client').Client;
 jest.mock('../../src/icinga');
 jest.mock('../../src/kube/node');
 jest.mock('json-stream');
-jest.mock(KubeApi.Client);
+jest.mock('kubernetes-client');
 
 const fixture = {
     "apiVersion": "extensions/v1beta1",

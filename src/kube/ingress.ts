@@ -115,6 +115,11 @@ export default class Ingress {
       this.jsonStream.on('data', async (object) => {
         this.logger.debug('received kubernetes ingress', {object});
 
+        if(object.object.kind !== 'Ingress') {
+          this.logger.error('skip invalid ingress object', {object: object});
+          return;
+        }
+
         if (object.type == 'MODIFIED' || object.type == 'DELETED') {
           await this.icinga.deleteHost(object.object.metadata.name);
         }
@@ -128,7 +133,7 @@ export default class Ingress {
         this.kubeListener();
       });
     } catch (err) {
-      this.logger.emerg('failed start ingresses listener', {error: err});
+      this.logger.error('failed start ingresses listener', {error: err});
     }
   }
 }

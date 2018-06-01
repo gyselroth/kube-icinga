@@ -70,6 +70,10 @@ export default class Node {
         }
 
         this.logger.debug('received kubernetes host', {object});
+        if(object.object.kind !== 'Node') {
+          this.logger.error('skip invalid node object', {object: object});
+          return;
+        }
 
         if (object.type == 'DELETED') {
           await this.icinga.deleteHost(object.object.metadata.name);
