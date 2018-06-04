@@ -73,7 +73,7 @@ List of configurable values:
 |`icinga.apiUser`|Icinga2 API username|`ICINGA_API_USERNAME`|`admin`|
 |`icinga.apiPassword`|Icinga2 API password|`ICINGA_API_PASSWORD`|`admin`|
 |`cleanup`|If `true` all kubernetes objects get removed from icinga at startup|`CLEANUP`|`true`|
-|`kubernetes.nodes.discover`|Deploy kubernetes ingress objects|`KUBERNETES_NODES_DISCOVER`|`true`|
+|`kubernetes.nodes.discover`|Deploy kubernetes node objects|`KUBERNETES_NODES_DISCOVER`|`true`|
 |`kubernetes.nodes.hostDefinition`|You may overwrite specific attributes of the icinga [host definiton](https://www.icinga.com/docs/icinga2/latest/doc/09-object-types/#host).|`ICINGA_NODES_HOST_DEFINITION`|`{}`|
 |`kubernetes.nodes.hostTemplates`|Specify a list of host templates|`ICINGA_NODES_HOST_TEMPLATES`|`['generic-host']`|
 |`kubernetes.ingresses.discover`|Deploy kubernetes ingress objects|`KUBERNETES_INGRESSES_DISCOVER`|`true`|
