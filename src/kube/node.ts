@@ -41,7 +41,7 @@ export default class Node {
     };
 
     if (!definition.spec.unschedulable) {
-      this.logger.debug('skip kube worker node'+definition.metadata.name+' since it is flagged as unschedulable');
+      this.logger.debug('skip kube worker node '+definition.metadata.name+' since it is flagged as unschedulable');
       this.nodes.push(definition.metadata.name);
     }
 
