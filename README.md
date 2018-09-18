@@ -52,7 +52,7 @@ Use another password!
 
 
 ## Deployment
-The recommended (and logical) way to deploy kube-icinga is deplyoing kube-icinga on kubernetes itself using the [gyselroth/kube-icinga](https://hub.docker.com/gyselroth/kube-icinga/) docker image.
+The recommended (and logical) way to deploy kube-icinga is deplyoing kube-icinga on kubernetes itself using the [gyselroth/kube-icinga](https://hub.docker.com/r/gyselroth/kube-icinga/) docker image.
 
 The kubernetes deployment can simply be added like this:
 ```sh
