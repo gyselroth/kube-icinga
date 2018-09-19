@@ -39,8 +39,8 @@ and be sure all your modifications pass the build.
 Please note that this project is released with a [Contributor Code of Conduct](https://github.com/gyselroth/kube-icinga/blob/master/CODE_OF_CONDUCT.md). By participating in this project you agree to abide by its terms.
 
 ## License
-This software is freely available under the terms of [GPL-3.0](https://github.com/gyselroth/kube-icinga/blob/master/LICENSE), please respect this license
-and do not contribute software parts which are not compatible with GPL-3.0.
+This software is freely available under the terms of [MIT](https://github.com/gyselroth/kube-icinga/blob/master/LICENSE), please respect this license
+and do not contribute software parts which are not compatible with MIT.
 
 ## Editor config
 This repository gets shipped with an .editorconfig configuration. For more information on how to configure your editor please visit [editorconfig](https://github.com/editorconfig).
