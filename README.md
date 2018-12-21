@@ -4,7 +4,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub release](https://img.shields.io/github/release/gyselroth/kube-icinga.svg)](https://github.com/gyselroth/kube-icinga/releases)
 
-## Description
 kube-icinga will automatically deploy icinga objects to monitor your kubernetes services.
 It has built-in autodiscovery and will work out of the box. However you can change various default configurations and deploy 
 custom icinga objects or disable/enable kubernetes objects to monitor.
@@ -15,7 +14,7 @@ Multiple watchers are bootstraped and listen for any kubernetes changes. Those c
 
 * Kubernetes namespaces will result in icinga service groups and host groups
 * Nodes will result in host objects
-* Ingresses will result in dummy icinga host objects (hostname ist taken from metadata.name) whereas ingress paths will get deployed as icinga services related to the ingress host object
+* Ingresses will result in dummy icinga host objects (hostname is taken from metadata.name) whereas ingress paths will get deployed as icinga services related to the ingress host object
 >**Note**: You may change this behaviour by attaching the services (ingress paths) to all kubernetes worker nodes by setting `kubernetes.ingresses.attachToNodes` to `true`. (This will result in many more services and checks depending on the size of your cluster!)
 * Services (ClusterIP, NodePort, LoadBalanacer) will also result in icinga host objects and service ports are icinga services.
 >**Note**: NodePort services will always be attached to each kubernetes worker node. See [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport) services for more information.
@@ -61,7 +60,7 @@ kubectl -f https://raw.githubusercontent.com/gyselroth/kube-icinga/master/kube-i
 (Change the secret password and ICINGA_ADDRESS value accordingly)
 
 ## Configuration
-kube-icinga itself can be configured via environment variables however you may also deploy and change the `config.json` file instead of environement variables.
+kube-icinga itself can be configured via environment variables however you may also deploy and change the `config.json` file instead of environment variables.
 
 List of configurable values:
 
