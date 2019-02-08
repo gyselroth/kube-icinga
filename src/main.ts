@@ -18,11 +18,13 @@ const kubeService = new Service(logger, kubeNode, kubeClient, icinga, new JSONSt
  */
 async function main() {
   if (config.cleanup) {
-    await icinga.cleanup();
+    await icinga.cleanup().catch(err => {
+      logger.error('failed to cleanup icinga objects', {error: err});
+    });
   }
 
   if (config.kubernetes.nodes.discover) {
-    kubeNode.kubeListener();
+     kubeNode.kubeListener();
   }
 
   if (config.kubernetes.ingresses.discover) {

@@ -1,3 +1,13 @@
+## 1.1.0
+
+* [FIX] Fixes "(node:25116) UnhandledPromiseRejectionWarning: TypeError: result is not iterable" due error response from icinga
+* [FIX] Better error handling and catching various uncaught promises
+* [FIX] Docs fix regaring how to create icinga2 api user
+* [CHANGE] Upgrade to winston ^3.0.0 stable
+* [CHANGE] Log format is now in json and includes a timestamp
+* [FIX] Service protocol is now lower cases which fixes issues like check_command=TCP insteadof check_command=tcp
+
+
 ## 1.0.1
 **Maintainer**: Raffael Sahli <sahli@gyselroth.com>\
 **Date**: Fri 01 Jun 2018 01:18:20 PM CEST
@@ -5,6 +15,7 @@
 * [FIX] fixed protocol (service ports.protocol) lowercase
 * [CHANGE] config logger.level => log.level
 * [FIX] catch error objects from kube watchers
+
 
 ## 1.0.0
 **Maintainer**: Raffael Sahli <sahli@gyselroth.com>\

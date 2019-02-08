@@ -41,11 +41,14 @@ You may wonder where your pods are in this setup. Well it does not make any sens
 * Icinga2 server with enabled API module
 
 ## Setup icinga2 api user
-kube-icina requires an [icinga api user](https://www.icinga.com/docs/icinga2/latest/doc/12-icinga2-api/#creating-apiusers) which first must be created. 
-You can either create it manually or using the icinga2 command utility.
+kube-icina requires an [icinga api user](https://icinga.com/docs/icinga2/latest/doc/12-icinga2-api/#authentication) which first must be created. 
 
- ```sh
-icinga2 api user --user kube-icinga --password kube-icinga
+/etc/icinga2/conf.d/api-users.conf:
+```
+object ApiUser "kube-icinga" {
+  password = "kube-icinga"
+  permissions = ["*"]
+}
 ```
 Use another password!
 

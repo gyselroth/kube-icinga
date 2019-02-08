@@ -1,4 +1,4 @@
-import {LoggerInstance} from 'winston';
+import {Logger} from 'winston';
 import Icinga from '../icinga';
 import JSONStream from 'json-stream';
 import KubeNode from './node';
@@ -11,7 +11,7 @@ export default class Service {
   static readonly TYPE_NODEPORT = 'NodePort';
   static readonly TYPE_LOADBALANCER = 'LoadBalancer';
 
-  protected logger: LoggerInstance;
+  protected logger: Logger;
   protected kubeClient;
   protected icinga: Icinga;
   protected jsonStream: JSONStream;
@@ -46,7 +46,7 @@ export default class Service {
   /**
    * kubernetes services
    */
-  constructor(logger: LoggerInstance, kubeNode: KubeNode, kubeClient, icinga: Icinga, jsonStream: JSONStream, options: object={}) {
+  constructor(logger: Logger, kubeNode: KubeNode, kubeClient, icinga: Icinga, jsonStream: JSONStream, options: object={}) {
     this.logger = logger;
     this.kubeClient = kubeClient;
     this.icinga = icinga;
@@ -111,7 +111,7 @@ export default class Service {
           if (hasCommand) {
             this.logger.debug('service can be checked via check command '+name);
             service = {
-              'check_command': name,
+              'check_command': name.toLowerCase(),
               'display_name': name,
               'vars._kubernetes': true,
               'vars.kubernetes': definition,
@@ -127,7 +127,7 @@ export default class Service {
           let protocol = servicePort.protocol.toLowerCase();
           let name = servicePort.name || protocol+':'+servicePort.port;
           service = {
-            'check_command': servicePort.protocol,
+            'check_command': protocol,
             'display_name': name.toLowerCase(),
             'vars._kubernetes': true,
             'vars.kubernetes': definition,
@@ -151,7 +151,7 @@ export default class Service {
       const stream = this.kubeClient.apis.v1.watch.services.getStream();
       stream.pipe(this.jsonStream);
       this.jsonStream.on('data', async (object) => {
-        this.logger.debug('received kubernetes service', {object});
+        this.logger.debug('received kubernetes service resource', {object});
 
         if(object.object.kind !== 'Service') {
           this.logger.error('skip invalid service object', {object: object});
@@ -168,7 +168,9 @@ export default class Service {
         }
 
         if (object.type == 'ADDED' || object.type == 'MODIFIED') {
-          this.prepareObject(object.object);
+          this.prepareObject(object.object).catch(err => {
+            this.logger.error('failed to handle resource', {error: err})
+          });
         }
       });
 

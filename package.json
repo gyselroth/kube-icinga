@@ -30,7 +30,7 @@
     "icinga2-api": "raffis/nodejs-icinga2api",
     "json-stream": "^1.0.0",
     "kubernetes-client": "^5.3.0",
-    "winston": "^3.0.0-rc5"
+    "winston": "^3.0.0"
   },
   "devDependencies": {
     "@types/jest": "^22.2.3",

@@ -4,10 +4,11 @@
   },
   "cleanup": true,
   "icinga": {
-    "address": "",
+    "address": "127.0.0.1",
+    "format": "${info.timestamp} ${info.level}: ${info.message}",
     "port": 5665,
-    "apiUser": "",
-    "apiPassword": ""
+    "apiUser": "kube-icinga",
+    "apiPassword": "kube-icinga"
   },
   "kubernetes": {
     "nodes": {

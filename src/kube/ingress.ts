@@ -1,4 +1,4 @@
-import {LoggerInstance} from 'winston';
+import {Logger} from 'winston';
 import Icinga from '../icinga';
 import JSONStream from 'json-stream';
 import KubeNode from './node';
@@ -7,7 +7,7 @@ import KubeNode from './node';
  * kubernetes ingresses
  */
 export default class Ingress {
-  protected logger: LoggerInstance;
+  protected logger: Logger;
   protected kubeClient;
   protected icinga: Icinga;
   protected jsonStream: JSONStream;
@@ -24,7 +24,7 @@ export default class Ingress {
   /**
    * kubernetes ingresses
    */
-  constructor(logger: LoggerInstance, kubeNode: KubeNode, kubeClient, icinga: Icinga, jsonStream: JSONStream, options: object={}) {
+  constructor(logger: Logger, kubeNode: KubeNode, kubeClient, icinga: Icinga, jsonStream: JSONStream, options: object={}) {
     this.logger = logger;
     this.kubeClient = kubeClient;
     this.icinga = icinga;
@@ -113,7 +113,7 @@ export default class Ingress {
       const stream = this.kubeClient.apis.extensions.v1beta1.watch.ingresses.getStream();
       stream.pipe(this.jsonStream);
       this.jsonStream.on('data', async (object) => {
-        this.logger.debug('received kubernetes ingress', {object});
+        this.logger.debug('received kubernetes ingress resource', {object});
 
         if(object.object.kind !== 'Ingress') {
           this.logger.error('skip invalid ingress object', {object: object});
@@ -125,7 +125,9 @@ export default class Ingress {
         }
 
         if (object.type == 'ADDED' || object.type == 'MODIFIED') {
-          this.prepareObject(object.object);
+          this.prepareObject(object.object).catch(err => {
+            this.logger.error('failed to handle resource', {error: err})
+          });
         }
       });
 

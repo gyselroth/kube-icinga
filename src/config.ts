@@ -10,6 +10,7 @@ try {
 const config = {
   log: {
     level: process.env.LOG_LEVEL || defaultConfig.log.level || 'info',
+    format: process.env.LOG_FORMAT || defaultConfig.log.format || '${info.timestamp} ${info.level}: ${info.message}'  
   },
   cleanup: process.env.CLEANUP || defaultConfig.cleanup || true,
   icinga: {
@@ -65,5 +66,5 @@ const config = {
     },
   },
 };
-
+console.log(config);
 export default config;

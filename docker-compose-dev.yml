@@ -1,0 +1,63 @@
+version: '2'
+services:
+  icinga2:
+    image: jordan/icinga2
+    restart: on-failure:5
+    # Set your hostname to the FQDN under which your
+    # sattelites will reach this container
+    hostname: icinga2
+    env_file:
+      - secrets_sql.env
+    environment:
+      - ICINGA2_FEATURE_GRAPHITE=1
+      # Important:
+      # keep the hostname graphite the same as
+      # the name of the graphite docker-container
+      - ICINGA2_FEATURE_GRAPHITE_HOST=graphite
+      - ICINGA2_FEATURE_GRAPHITE_PORT=2003
+      - ICINGA2_FEATURE_GRAPHITE_URL=http://graphite
+      #- ICINGAWEB2_ADMIN_USER=icingaadmin
+      #- ICINGAWEB2_ADMIN_PASS=icinga
+      #- ICINGA2_USER_FULLNAME=Icinga2 Docker Monitoring Instance
+      - DEFAULT_MYSQL_HOST=mysql
+    volumes:
+      - ./data/icinga/cache:/var/cache/icinga2
+      - ./data/icinga/certs:/etc/apache2/ssl
+      - ./data/icinga/etc/icinga2:/etc/icinga2
+      - ./data/icinga/etc/icingaweb2:/etc/icingaweb2
+      - ./data/icinga/lib/icinga:/var/lib/icinga2
+      - ./data/icinga/lib/php/sessions:/var/lib/php/sessions
+      - ./data/icinga/log/apache2:/var/log/apache2
+      - ./data/icinga/log/icinga2:/var/log/icinga2
+      - ./data/icinga/log/icingaweb2:/var/log/icingaweb2
+      - ./data/icinga/log/mysql:/var/log/mysql
+      - ./data/icinga/spool:/var/spool/icinga2
+      # If you want to enable outbound e-mail, create the files
+      #  - ./ssmtp/ssmtp.conf
+      #  - ./ssmtp/revaliases
+      #  and configure to your corresponding mail setup.
+      #  See: https://github.com/jjethwa/icinga2#sending-notification-mails
+      #- ./ssmtp/revaliases:/etc/ssmtp/revaliases:ro
+      #- ./ssmtp/ssmtp.conf:/etc/ssmtp/ssmtp.conf:ro
+    ports:
+      - "80:80"
+      - "443:443"
+      - "5665:5665"
+  graphite:
+    image: graphiteapp/graphite-statsd:latest
+    container_name: graphite
+    restart: on-failure:5
+    hostname: graphite
+    volumes:
+      - ./data/graphite/conf:/opt/graphite/conf
+      - ./data/graphite/storage:/opt/graphite/storage
+      - ./data/graphite/log/graphite:/var/log/graphite
+      - ./data/graphite/log/carbon:/var/log/carbon
+  mysql:
+    image: mariadb:10.1
+    env_file:
+      - secrets_sql.env
+    volumes:
+      - ./data/mysql/data:/var/lib/mysql
+      # If you have previously used the container's internal DB use:
+      #- ./data/icinga/lib/mysql:/var/lib/mysql

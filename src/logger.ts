@@ -1,11 +1,16 @@
-import * as winston from 'winston';
+import {createLogger, format,  transports} from 'winston';
 import config from './config';
 
-const logger = winston.createLogger({
+const logger = createLogger({
   level: config.log.level,
-  format: winston.format.simple(),
+  format: format.combine(
+    format.timestamp({
+      format: 'YYYY-MM-DD HH:mm:ss'
+    }),
+    format.json()  
+  ), 
   transports: [
-    new winston.transports.Console(),
+    new transports.Console(),
   ],
 });
 

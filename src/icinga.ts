@@ -1,17 +1,17 @@
-import {LoggerInstance} from 'winston';
+import {Logger} from 'winston';
 import IcingaClient from 'icinga2-api';
 
 /**
  * icinga wrapper
  */
 export default class Icinga {
-  protected logger: LoggerInstance;
+  protected logger: Logger;
   protected icingaClient: IcingaClient;
 
   /**
    * icinga wrapper
    */
-  constructor(logger: LoggerInstance, icingaClient: IcingaClient) {
+  constructor(logger: Logger, icingaClient: IcingaClient) {
     this.logger = logger;
     this.icingaClient = icingaClient;
   }
@@ -26,7 +26,7 @@ export default class Icinga {
           if (err.Statuscode == '404') {
             resolve(false);
           } else {
-            reject();
+            reject(err);
           }
         } else {
           resolve(true);
@@ -124,7 +124,7 @@ export default class Icinga {
               }
             });
           } else {
-            reject();
+            reject(err);
           }
         }
       });
@@ -203,7 +203,12 @@ export default class Icinga {
 
     return new Promise((resolve, reject) => {
       this.icingaClient.getServiceFiltered({filter: 'service.vars._kubernetes == true'}, async (err, result) => {
-        const handlers = [];
+        if(err) {
+          return reject(err);
+        }
+
+        console.log(result, err);
+        var handlers = [];
         for (const service of result) {
           handlers.push(this.deleteService(service.attrs.host_name, service.attrs.name));
         }
@@ -213,7 +218,12 @@ export default class Icinga {
       });
 
       this.icingaClient.getHostFiltered({filter: 'host.vars._kubernetes == true'}, async (err, result) => {
-        const handlers = [];
+        if(err) {
+          return reject(err);
+        }
+
+        console.log(result);
+        var handlers = [];
         for (const host of result) {
           handlers.push(this.deleteHost(host.attrs.name));
         }
