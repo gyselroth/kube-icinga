@@ -10,13 +10,12 @@ try {
 const config = {
   log: {
     level: process.env.LOG_LEVEL || defaultConfig.log.level || 'info',
-    format: process.env.LOG_FORMAT || defaultConfig.log.format || '${info.timestamp} ${info.level}: ${info.message}'  
   },
   cleanup: process.env.CLEANUP || defaultConfig.cleanup || true,
   icinga: {
     address: process.env.ICINGA_ADDRESS || defaultConfig.icinga.address || '127.0.0.1',
     port: process.env.ICINGA_PORT || defaultConfig.icinga.port || '5661',
-    apiUser: process.env.ICINGA_API_USER || defaultConfig.icinga.apiUser || 'admin',
+    apiUser: process.env.ICINGA_API_USERNAME || defaultConfig.icinga.apiUser || 'admin',
     apiPassword: process.env.ICINGA_API_PASSWORD || defaultConfig.icinga.apiPassword || 'admin',
   },
   kubernetes: {
@@ -34,6 +33,15 @@ const config = {
       hostTemplates: process.env.KUBERNETES_INGRESSES_HOST_TEMPLATES || defaultConfig.kubernetes.ingresses.hostTemplates || ['generic-host'],
       attachToNodes: process.env.KUBERNETES_INGRESSES_ATTACHTONODES || defaultConfig.kubernetes.ingresses.attachToNodes || false,
     },
+    volumes: {
+      discover: process.env.KUBERNETES_INGRESSES_DISCOVER || defaultConfig.kubernetes.volumes.discover || true,
+      applyServices: process.env.KUBERNETES_INGRESSES_APPLYSERVICES || defaultConfig.kubernetes.volumes.applyServices || true,
+      serviceDefinition: process.env.KUBERNETES_INGRESSES_SERVICE_DEFINITION || defaultConfig.kubernetes.volumes.serviceDefinition || {},
+      hostDefinition: process.env.KUBERNETES_INGRESSES_HOST_DEFINITION || defaultConfig.kubernetes.volumes.hostDefinition || {},
+      serviceTemplates: process.env.KUBERNETES_INGRESSES_SERVICE_TEMPLATES || defaultConfig.kubernetes.volumes.serviceTemplates || ['generic-service'],
+      hostTemplates: process.env.KUBERNETES_INGRESSES_HOST_TEMPLATES || defaultConfig.kubernetes.volumes.hostTemplates || ['generic-host'],
+      attachToNodes: process.env.KUBERNETES_INGRESSES_ATTACHTONODES || defaultConfig.kubernetes.volumes.attachToNodes || false,
+    },
     services: {
       ClusterIP: {
         discover: process.env.KUBERNETES_SERVICES_CLUSTERIP_DISCOVER || defaultConfig.kubernetes.services.ClusterIP.discover || false,
@@ -42,7 +50,6 @@ const config = {
         hostDefinition: process.env.KUBERNETES_SERVICES_CLUSTERIP_HOST_DEFINITION || defaultConfig.kubernetes.services.ClusterIP.hostDefinition || {},
         serviceTemplates: process.env.KUBERNETES_SERVICES_CLUSTERIP_SERVICE_TEMPLATES || defaultConfig.kubernetes.services.ClusterIP.serviceTemplates || ['generic-service'],
         hostTemplates: process.env.KUBERNETES_SERVICES_CLUSTERIP_HOST_TEMPLATES || defaultConfig.kubernetes.services.ClusterIP.hostTemplates || ['generic-host'],
-        portNameAsCommand: process.env.KUBERNETES_SERVICES_CLUSTERIP_PORTNAMEASCOMMAND || defaultConfig.kubernetes.services.ClusterIP.portNameAsCommand || true,
       },
       NodePort: {
         discover: process.env.KUBERNETES_SERVICES_NODEPORT_DISCOVER || defaultConfig.kubernetes.services.NodePort.discover || true,
@@ -51,8 +58,6 @@ const config = {
         hostDefinition: process.env.KUBERNETES_SERVICES_NODEPORT_HOST_DEFINITION || defaultConfig.kubernetes.services.NodePort.hostDefinition || {},
         serviceTemplates: process.env.KUBERNETES_SERVICES_NODEPORT_SERVICE_TEMPLATES || defaultConfig.kubernetes.services.NodePort.serviceTemplates || ['generic-service'],
         hostTemplates: process.env.KUBERNETES_SERVICES_NODEPORT_HOST_TEMPLATES || defaultConfig.kubernetes.services.NodePort.hostTemplates || ['generic-host'],
-        portNameAsCommand: process.env.KUBERNETES_SERVICES_NODEPORT_PORTNAMEASCOMMAND || defaultConfig.kubernetes.services.NodePort.portNameAsCommand || true,
-        attachToNodes: process.env.KUBERNETES_SERVICES_NODEPORT_ATTACHTONODES || defaultConfig.kubernetes.services.NodePort.attachToNodes || true,
       },
       LoadBalancer: {
         discover: process.env.KUBERNETES_SERVICES_LOADBALANCER_DISCOVER || defaultConfig.kubernetes.services.LoadBalancer.discover || true,
@@ -61,10 +66,9 @@ const config = {
         hostDefinition: process.env.KUBERNETES_SERVICES_LOADBALANCER_HOST_DEFINITION || defaultConfig.kubernetes.services.LoadBalancer.hostDefinition || {},
         serviceTemplates: process.env.KUBERNETES_SERVICES_LOADBALANCER_SERVICE_TEMPLATES || defaultConfig.kubernetes.services.LoadBalancer.serviceTemplates || ['generic-service'],
         hostTemplates: process.env.KUBERNETES_SERVICES_LOADBALANCER_HOST_TEMPLATES || defaultConfig.kubernetes.services.LoadBalancer.hostTemplates || ['generic-host'],
-        portNameAsCommand: process.env.KUBERNETES_SERVICES_LOADBALANCER_PORTNAMEASCOMMAND || defaultConfig.kubernetes.services.LoadBalancer.portNameAsCommand || true,
       },
     },
   },
 };
-console.log(config);
+
 export default config;

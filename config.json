@@ -1,11 +1,10 @@
 {
   "log": {
-    "level": "info"
+    "level": "debug"
   },
   "cleanup": true,
   "icinga": {
     "address": "127.0.0.1",
-    "format": "${info.timestamp} ${info.level}: ${info.message}",
     "port": 5665,
     "apiUser": "kube-icinga",
     "apiPassword": "kube-icinga"
@@ -18,7 +17,15 @@
     },
     "ingresses": {
       "discover": true,
-      "serviceDefiniton": {},
+      "serviceDefinition": {},
+      "hostDefinition": {},
+      "serviceTemplates": ["generic-service"],
+      "hostTemplates": ["generic-host"],
+      "applyServices": true,
+      "attachToNodes": false
+    },
+    "volumes": {
+      "discover": true,
       "hostDefinition": {},
       "serviceTemplates": ["generic-service"],
       "hostTemplates": ["generic-host"],
@@ -31,27 +38,24 @@
         "hostDefinition": {},
         "serviceTemplates": ["generic-service"],
         "hostTemplates": ["generic-host"],
-        "applyServices": false,
-        "portNameAsCommand": true
+        "applyServices": false
       },
       "NodePort": {
         "discover": true,
-        "serviceDefiniton": {},
+        "serviceDefinition": {},
         "hostDefinition": {},
         "serviceTemplates": ["generic-service"],
         "hostTemplates": ["generic-host"],
         "applyServices": false,
-        "portNameAsCommand": true,
         "attachToNodes": false
       },
       "LoadBalancer": {
         "discover": true,
-        "serviceDefiniton": {},
+        "serviceDefinition": {},
         "hostDefinition": {},
         "serviceTemplates": ["generic-service"],
         "hostTemplates": ["generic-host"],
-        "applyServices": false,
-        "portNameAsCommand": true
+        "applyServices": false
       }
     }
   }

@@ -126,6 +126,8 @@ export default class Icinga {
           } else {
             reject(err);
           }
+        } else {
+          resolve(true);
         }
       });
     });
@@ -207,7 +209,6 @@ export default class Icinga {
           return reject(err);
         }
 
-        console.log(result, err);
         var handlers = [];
         for (const service of result) {
           handlers.push(this.deleteService(service.attrs.host_name, service.attrs.name));
@@ -222,7 +223,6 @@ export default class Icinga {
           return reject(err);
         }
 
-        console.log(result);
         var handlers = [];
         for (const host of result) {
           handlers.push(this.deleteHost(host.attrs.name));

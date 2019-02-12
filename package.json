@@ -7,7 +7,7 @@
     "prebuild": "tsc",
     "start": "tsc && nodejs build/main.js",
     "build": "eslint  --fix src/ --ext ts && tsc && jest --coverage",
-    "test": "jest --coverage",
+    "test": "tsc && jest --coverage",
     "coveralls": "coveralls < coverage/lcov.info"
   },
   "repository": {
@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/raffis/kube-icinga#readme",
   "dependencies": {
-    "icinga2-api": "raffis/nodejs-icinga2api",
+    "icinga2-api": "github:raffis/nodejs-icinga2api",
     "json-stream": "^1.0.0",
     "kubernetes-client": "^5.3.0",
     "winston": "^3.0.0"
@@ -38,10 +38,9 @@
     "coveralls": "^3.0.1",
     "eslint": "^4.19.1",
     "eslint-config-google": "^0.9.1",
-    "jest": "^23.0.1",
-    "source-map-support": "^0.5.6",
+    "jest": "^23.0.0",
     "ts-jest": "^22.4.6",
-    "typescript": "^2.8.3",
+    "typescript": "^2.9.2",
     "typescript-eslint-parser": "^15.0.0"
   },
   "jest": {

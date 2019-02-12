@@ -1,11 +1,12 @@
 import {Logger} from 'winston';
 import Icinga from '../icinga';
 import JSONStream from 'json-stream';
+import Resource from './abstract.resource';
 
 /**
  * kubernetes hosts
  */
-export default class Node {
+export default class Node extends Resource {
   protected logger: Logger;
   protected kubeClient;
   protected icinga: Icinga;
@@ -21,6 +22,7 @@ export default class Node {
    * kubernetes hosts
    */
   constructor(logger: Logger, kubeClient, icinga: Icinga, jsonStream: JSONStream, options) {
+    super();
     this.logger = logger;
     this.kubeClient = kubeClient;
     this.icinga = icinga;
