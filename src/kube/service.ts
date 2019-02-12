@@ -2,11 +2,54 @@ import {Logger} from 'winston';
 import Icinga from '../icinga';
 import JSONStream from 'json-stream';
 import KubeNode from './node';
+import Resource from './abstract.resource';
+
+interface ServiceTypeOptions {
+  discover?: boolean;
+  applyServices?: boolean;
+  hostDefinition?: any;
+  serviceDefinition?: any;
+  hostTemplates?: string[];
+  serviceTemplates?: string[];
+}
+
+interface ServiceOptions {
+  ClusterIP?: ServiceTypeOptions;
+  NodePort?: ServiceTypeOptions;
+  LoadBalancer?: ServiceTypeOptions;
+}
+
+const defaults: ServiceOptions = {
+    ClusterIP: {
+      discover: false,
+      applyServices: true,
+      hostDefinition: {},
+      serviceDefinition: {},
+      hostTemplates: [],
+      serviceTemplates: [],
+    },
+    NodePort: {
+      discover: true,
+      applyServices: true,
+      hostDefinition: {},
+      serviceDefinition: {},
+      hostTemplates: [],
+      serviceTemplates: [],
+    },
+    LoadBalancer: {
+      discover: true,
+      applyServices: true,
+      hostDefinition: {},
+      serviceDefinition: {},
+      hostTemplates: [],
+      serviceTemplates: [],
+    },
+};
 
 /**
  * kubernetes services
  */
-export default class Service {
+export default class Service extends Resource {
   static readonly TYPE_CLUSTERIP = 'ClusterIP';
   static readonly TYPE_NODEPORT = 'NodePort';
   static readonly TYPE_LOADBALANCER = 'LoadBalancer';
@@ -16,42 +59,22 @@ export default class Service {
   protected icinga: Icinga;
   protected jsonStream: JSONStream;
   protected kubeNode: KubeNode;
-  protected options = {
-    ClusterIP: {
-      discovery: false,
-      applyServices: true,
-      hostDefinition: {},
-      serviceDefinition: {},
-      hostTemplates: [],
-      serviceTemplates: [],
-    },
-    NodePort: {
-      discovery: true,
-      applyServices: true,
-      hostDefinition: {},
-      serviceDefinition: {},
-      hostTemplates: [],
-      serviceTemplates: [],
-    },
-    LoadBalancer: {
-      discovery: true,
-      applyServices: true,
-      hostDefinition: {},
-      serviceDefinition: {},
-      hostTemplates: [],
-      serviceTemplates: [],
-    },
-  };
+  protected options: ServiceOptions = defaults;
 
   /**
    * kubernetes services
    */
-  constructor(logger: Logger, kubeNode: KubeNode, kubeClient, icinga: Icinga, jsonStream: JSONStream, options: object={}) {
+  constructor(logger: Logger, kubeNode: KubeNode, kubeClient, icinga: Icinga, jsonStream: JSONStream, options: ServiceOptions=defaults) {
+    super();
     this.logger = logger;
     this.kubeClient = kubeClient;
     this.icinga = icinga;
     this.jsonStream = jsonStream;
-    this.options = Object.assign(this.options, options);
+    var clone = JSON.parse(JSON.stringify(defaults));
+    Object.assign(clone.ClusterIP, options.ClusterIP);
+    Object.assign(clone.NodePort, options.NodePort);
+    Object.assign(clone.LoadBalancer, options.LoadBalancer);
+    this.options = clone;
     this.kubeNode = kubeNode;
   }
 
@@ -76,7 +99,7 @@ export default class Service {
    * Apply service
    */
   protected async applyService(host: string, name: string, type: string, definition, templates: string[]) {
-    if (type === Service.TYPE_NODEPORT) {
+   if (type === Service.TYPE_NODEPORT) {
       for (const node of this.kubeNode.getWorkerNodes()) {
         definition.host_name = node;
         this.icinga.applyService(node, name, definition, templates);
@@ -92,8 +115,18 @@ export default class Service {
    */
   public async prepareObject(definition): Promise<any> {
     let serviceType = definition.spec.type;
-    let options = this.options[serviceType];
 
+    if(!this.options[serviceType]) {
+      throw new Error('unknown service type provided');
+    }
+
+    var options = this.options[serviceType];
+    var service = options.serviceDefinition;
+    service['groups'] = [definition.metadata.namespace];
+    Object.assign(service, this.prepareResource(definition));
+
+    var templates = options.serviceTemplates;
+    templates = templates.concat(this.prepareTemplates(definition));
     if (serviceType !== Service.TYPE_NODEPORT) {
       await this.applyHost(definition.metadata.name, definition.spec.clusterIP, serviceType, definition, options.hostTemplates);
     }
@@ -102,43 +135,31 @@ export default class Service {
       await this.icinga.applyServiceGroup(definition.metadata.namespace);
 
       for (const servicePort of definition.spec.ports) {
-        let service;
-
-        if (servicePort.name && options.portNameAsCommand) {
-          let name = servicePort.name.toLowerCase();
-          let hasCommand = await this.icinga.hasCheckCommand(name);
-
+        let port = JSON.parse(JSON.stringify(service));
+        if (port.check_command) {
+          let hasCommand = await this.icinga.hasCheckCommand(port.check_command);
           if (hasCommand) {
-            this.logger.debug('service can be checked via check command '+name);
-            service = {
-              'check_command': name.toLowerCase(),
-              'display_name': name,
-              'vars._kubernetes': true,
-              'vars.kubernetes': definition,
-              'groups': [definition.metadata.namespace],
-            };
-            service['vars.'+servicePort.name+'_port'] = servicePort.nodePort || servicePort.port;
+            this.logger.debug('service can be checked via check command '+port.check_command);
+            port.display_name = name;
+            port['vars.'+port.check_command+'_port'] = servicePort.nodePort || servicePort.port;
           } else {
-            this.logger.warn('service can not be checked via check command '+servicePort.name+', icinga check command does not exists, fallback to '+servicePort.protocol);
+            delete port.check_command;  
+            this.logger.warn('service can not be checked via check command '+port.check_command+', icinga check command does not exists, fallback to service protocol '+servicePort.protocol);
           }
         }
 
-        if (!service) {
+        if (!port.check_command) {
           let protocol = servicePort.protocol.toLowerCase();
           let name = servicePort.name || protocol+':'+servicePort.port;
-          service = {
-            'check_command': protocol,
-            'display_name': name.toLowerCase(),
-            'vars._kubernetes': true,
-            'vars.kubernetes': definition,
-            'groups': [definition.metadata.namespace],
-          };
-
-          service['vars.'+protocol+'_port'] = servicePort.nodePort || servicePort.port;
+          port.check_command = protocol;
+          port.display_name = name.toLowerCase();
+          port['vars.'+protocol+'_port'] = servicePort.nodePort || servicePort.port;
         }
 
-        Object.assign(service, options.serviceDefinition);
-        this.applyService(definition.metadata.name, service.display_name, serviceType, service, options.serviceTemplates);
+        port['vars._kubernetes'] = true;
+        port['vars.kubernetes'] = definition;
+
+        this.applyService(definition.metadata.name, port.display_name, serviceType, port, templates);
       }
     }
   }
@@ -159,7 +180,7 @@ export default class Service {
         }
 
         if (!this.options[object.object.spec.type].discover) {
-          this.logger.debug('skip service object, since ['+object.object.spec.type+'] is not enabled for discovery', {object: object});
+          this.logger.debug('skip service object, since ['+object.object.spec.type+'] is not enabled for discover', {object: object});
           return;
         }
 
