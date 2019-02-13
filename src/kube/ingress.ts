@@ -38,7 +38,7 @@ export default class Ingress extends Resource {
   /**
    * Apply host
    */
-  protected async applyHost(name: string, address: string, metadata, templates: string[]) {
+  protected async applyHost(name: string, address: string, metadata, templates: string[]): Promise<boolean> {
     let definition = {
       'display_name': name,
       'address': address,
@@ -49,7 +49,7 @@ export default class Ingress extends Resource {
     };
 
     Object.assign(definition, this.options.hostDefinition);
-    return this.icinga.applyHost(name, address, definition, this.options.hostTemplates);
+    return this.icinga.applyHost(name, definition, this.options.hostTemplates);
   }
 
   /**

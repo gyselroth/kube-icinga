@@ -38,7 +38,7 @@ export default class Icinga {
   /**
    * Create host group
    */
-  public applyHostGroup(name: string): Promise<any> {
+  public applyHostGroup(name: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
       this.logger.info(`apply host group ${name} aka kubernetes namespace`);
 
@@ -48,19 +48,19 @@ export default class Icinga {
             this.logger.info(`host group ${name} on monitoring was not found, create one`, {error: err});
 
             this.icingaClient.createHostGroup(name, name, [], (err, result) => {
-              resolve();
-
               if (err) {
                 this.logger.error(`failed create host group ${name}`, {error: err});
+                reject(err);
               } else {
                 this.logger.info(`host group ${name} was created successfully`, {result: result});
+                resolve(true);  
               }
             });
           } else {
-            reject();
+            reject(err);
           }
         } else {
-          resolve();
+          resolve(true);
         }
       });
     });
@@ -79,16 +79,16 @@ export default class Icinga {
             this.logger.info(`service group ${name} on monitoring was not found, create one`, {error: err});
 
             this.icingaClient.createServiceGroup(name, name, [], (err, result) => {
-              resolve(true);
-
               if (err) {
                 this.logger.error(`failed create service group ${name}`, {error: err});
+                reject(err); 
               } else {
                 this.logger.info(`service group ${name} was created successfully`, {result: result});
+                resolve(true); 
               }
             });
           } else {
-            reject();
+            reject(err);
           }
         } else {
           resolve(true);
@@ -100,7 +100,7 @@ export default class Icinga {
   /**
    * Create or update a new icinga host object
    */
-  public applyHost(name: string, address: string, definition, templates: string[]=[]): Promise<boolean> {
+  public applyHost(name: string, definition, templates: string[]=[]): Promise<boolean> {
     let host = {
       attrs: definition,
       templates: templates,
@@ -115,12 +115,12 @@ export default class Icinga {
             this.logger.info(`host ${name} on monitoring was not found, create one`, {error: err});
 
             this.icingaClient.createHostCustom(JSON.stringify(host), name, (err, result) => {
-              resolve(true);
-
               if (err) {
                 this.logger.error(`failed create host ${name}`, {error: err});
+                reject(err);
               } else {
                 this.logger.info(`host ${name} was created successfully`, {result: result});
+                resolve(true);
               }
             });
           } else {
@@ -136,28 +136,36 @@ export default class Icinga {
   /**
    * Create or update an icinga service object
    */
-  public applyService(host: string, name: string, definition, templates: string[]=[]) {
+  public applyService(host: string, name: string, definition, templates: string[]=[]): Promise<boolean> {
     let service = {
       attrs: definition,
       templates: templates,
     };
 
-    this.logger.info(`apply service ${name} to host ${host}`, {service: definition});
+    return new Promise((resolve, reject) => {
+      this.logger.info(`apply service ${name} to host ${host}`, {service: definition});
 
-    this.icingaClient.getService(host, name, (err, result) => {
-      if (err) {
-        if (err.Statuscode == '404') {
-          this.logger.info(`service ${name} on host ${host} was not found, create one`, {error: err});
+      this.icingaClient.getService(host, name, (err, result) => {
+        if (err) {
+          if (err.Statuscode == '404') {
+            this.logger.info(`service ${name} on host ${host} was not found, create one`, {error: err});
 
-          this.icingaClient.createServiceCustom(JSON.stringify(service), host, name, (err, result) => {
-            if (err) {
-              this.logger.error(`failed create service ${name} on host ${host}`, {error: err});
-            } else {
-              this.logger.info(`service ${name} on host ${host} was created successfully`, {result: result});
-            }
-          });
+            this.icingaClient.createServiceCustom(JSON.stringify(service), host, name, (err, result) => {
+              if (err) {
+                this.logger.error(`failed create service ${name} on host ${host}`, {error: err});
+                reject(err);
+              } else {
+                this.logger.info(`service ${name} on host ${host} was created successfully`, {result: result});
+                resolve(true);
+              }
+            });
+          } else {
+            reject(err);
+          }
+        } else {
+          resolve(true);
         }
-      }
+      });
     });
   }
 

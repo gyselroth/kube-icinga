@@ -69,9 +69,8 @@ describe('kubernetes ingresses', () => {
       instance.prepareObject(fixture);  
       const call = Icinga.applyHost.mock.calls[0];
       expect(call[0]).toBe('foo');
-      expect(call[1]).toBe('foo');
-      expect(call[2].display_name).toBe('foo');
-      expect(call[2].check_command).toBe('dummy');
+      expect(call[1].display_name).toBe('foo');
+      expect(call[1].check_command).toBe('dummy');
     });
 
     it('create icinga host object with custom definitions', () => {
@@ -85,8 +84,8 @@ describe('kubernetes ingresses', () => {
       Icinga.applyHost = jest.fn();
       instance.prepareObject(fixture);  
       const call = Icinga.applyHost.mock.calls[0];
-      expect(call[2]['vars.foo']).toBe('bar');
-      expect(call[2]['vars.check_command']).toBe('foo');
+      expect(call[1]['vars.foo']).toBe('bar');
+      expect(call[1]['vars.check_command']).toBe('foo');
     });
 
     it('create icinga host object with templates', () => {
@@ -97,7 +96,7 @@ describe('kubernetes ingresses', () => {
       Icinga.applyHost = jest.fn();
       instance.prepareObject(fixture);  
       const call = Icinga.applyHost.mock.calls[0];
-      expect(call[3]).toEqual(['foo', 'bar']);
+      expect(call[2]).toEqual(['foo', 'bar']);
     });
 
     it('do not create icinga host object while attachToNodes is enabled', () => {

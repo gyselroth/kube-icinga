@@ -81,7 +81,7 @@ export default class Service extends Resource {
   /**
    * Apply host
    */
-  protected async applyHost(name: string, address: string, type: string, metadata, templates: string[]) {
+  protected async applyHost(name: string, address: string, type: string, metadata, templates: string[]): Promise<boolean> {
     let definition = {
       'display_name': name,
       'address': address,
@@ -92,7 +92,7 @@ export default class Service extends Resource {
     };
 
     Object.assign(definition, this.options[type].hostDefinition);
-    return this.icinga.applyHost(name, address, definition, templates);
+    return this.icinga.applyHost(name, definition, templates);
   }
 
   /**

@@ -33,7 +33,7 @@ export default class Node extends Resource {
   /**
    * Preapre icinga object and apply
    */
-  protected async prepareObject(definition: any): Promise<any> {
+  protected async prepareObject(definition: any): Promise<boolean> {
     let host = {
       'display_name': definition.metadata.name,
       'host_name': definition.metadata.name,
@@ -48,7 +48,7 @@ export default class Node extends Resource {
     }
 
     host = Object.assign(host, this.options.hostDefinition);
-    return this.icinga.applyHost(host.host_name, host.host_name, host, this.options.hostTemplates);
+    return this.icinga.applyHost(host.host_name, host, this.options.hostTemplates);
   }
 
   /**
