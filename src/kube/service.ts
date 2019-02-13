@@ -55,7 +55,6 @@ export default class Service extends Resource {
   static readonly TYPE_LOADBALANCER = 'LoadBalancer';
 
   protected logger: Logger;
-  protected kubeClient;
   protected icinga: Icinga;
   protected jsonStream: JSONStream;
   protected kubeNode: KubeNode;
@@ -64,10 +63,9 @@ export default class Service extends Resource {
   /**
    * kubernetes services
    */
-  constructor(logger: Logger, kubeNode: KubeNode, kubeClient, icinga: Icinga, jsonStream: JSONStream, options: ServiceOptions=defaults) {
+  constructor(logger: Logger, kubeNode: KubeNode, icinga: Icinga, jsonStream: JSONStream, options: ServiceOptions=defaults) {
     super();
     this.logger = logger;
-    this.kubeClient = kubeClient;
     this.icinga = icinga;
     this.jsonStream = jsonStream;
     var clone = JSON.parse(JSON.stringify(defaults));
@@ -101,7 +99,6 @@ export default class Service extends Resource {
   protected async applyService(host: string, name: string, type: string, definition, templates: string[]) {
    if (type === Service.TYPE_NODEPORT) {
       for (const node of this.kubeNode.getWorkerNodes()) {
-        definition.host_name = node;
         this.icinga.applyService(node, name, definition, templates);
       }
     } else {
@@ -121,14 +118,15 @@ export default class Service extends Resource {
     }
 
     var options = this.options[serviceType];
-    var service = options.serviceDefinition;
+    var service = JSON.parse(JSON.stringify(options.serviceDefinition));
     service['groups'] = [definition.metadata.namespace];
     Object.assign(service, this.prepareResource(definition));
 
+    let hostname = this.escapeName(['service', definition.metadata.namespace, definition.metadata.name].join('-'));
     var templates = options.serviceTemplates;
     templates = templates.concat(this.prepareTemplates(definition));
     if (serviceType !== Service.TYPE_NODEPORT) {
-      await this.applyHost(definition.metadata.name, definition.spec.clusterIP, serviceType, definition, options.hostTemplates);
+      await this.applyHost(hostname, definition.spec.clusterIP, serviceType, definition, options.hostTemplates);
     }
 
     if (options.applyServices) {
@@ -140,26 +138,27 @@ export default class Service extends Resource {
           let hasCommand = await this.icinga.hasCheckCommand(port.check_command);
           if (hasCommand) {
             this.logger.debug('service can be checked via check command '+port.check_command);
-            port.display_name = name;
             port['vars.'+port.check_command+'_port'] = servicePort.nodePort || servicePort.port;
           } else {
             delete port.check_command;  
             this.logger.warn('service can not be checked via check command '+port.check_command+', icinga check command does not exists, fallback to service protocol '+servicePort.protocol);
           }
         }
+        
+        let protocol = servicePort.protocol.toLowerCase();
+        let port_name = servicePort.name || protocol+':'+servicePort.port;
 
         if (!port.check_command) {
-          let protocol = servicePort.protocol.toLowerCase();
-          let name = servicePort.name || protocol+':'+servicePort.port;
           port.check_command = protocol;
-          port.display_name = name.toLowerCase();
           port['vars.'+protocol+'_port'] = servicePort.nodePort || servicePort.port;
         }
 
         port['vars._kubernetes'] = true;
         port['vars.kubernetes'] = definition;
+        let name = this.escapeName([definition.metadata.name, port_name].join('-'));
+        port['display_name'] = name;
 
-        this.applyService(definition.metadata.name, port.display_name, serviceType, port, templates);
+        this.applyService(hostname, name, serviceType, port, templates);
       }
     }
   }
@@ -167,9 +166,9 @@ export default class Service extends Resource {
   /**
    * Start kube listener
    */
-  public async kubeListener(): Promise<any> {
+  public async kubeListener(provider) {
     try {
-      const stream = this.kubeClient.apis.v1.watch.services.getStream();
+      var stream = provider(); 
       stream.pipe(this.jsonStream);
       this.jsonStream.on('data', async (object) => {
         this.logger.debug('received kubernetes service resource', {object});
@@ -196,7 +195,7 @@ export default class Service extends Resource {
       });
 
       this.jsonStream.on('finish', () => {
-        this.kubeListener();
+        this.kubeListener(provider);
       });
     } catch (err) {
       this.logger.error('failed start services listener', {error: err});

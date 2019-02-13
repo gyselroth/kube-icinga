@@ -177,11 +177,12 @@ export default class Icinga {
       this.logger.info(`delete service ${name} from host ${host}`);
 
       return this.icingaClient.deleteService(name, host, (err, result) => {
-        resolve(true);
         if (err) {
           this.logger.error(`failed delete service ${name} from host ${host}`, {error: err});
+          resolve(false);
         } else {
           this.logger.info(`service ${name} was deleted successfully from host ${host}`, {result: result});
+          resolve(true);
         }
       });
     });
@@ -195,11 +196,12 @@ export default class Icinga {
       this.logger.info(`delete host ${name}`);
 
       this.icingaClient.deleteHost(name, (err, result) => {
-        resolve(true);
         if (err) {
           this.logger.error(`failed delete host ${name}`, {error: err});
+          resolve(false);
         } else {
           this.logger.info(`host ${name} was deleted successfully`, {result: result});
+          resolve(true);
         }
       });
     });

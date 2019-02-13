@@ -4,12 +4,21 @@ import JSONStream from 'json-stream';
 import KubeNode from './node';
 import Resource from './abstract.resource';
 
+interface IngressOptions {
+  discover?: boolean;
+  applyServices?: boolean;
+  attachToNodes?: boolean;
+  hostDefinition?: object;
+  serviceDefinition?: object;
+  hostTemplates?: string[];
+  serviceTemplates?: string[];
+}
+
 /**
  * kubernetes ingresses
  */
 export default class Ingress extends Resource {
   protected logger: Logger;
-  protected kubeClient;
   protected icinga: Icinga;
   protected jsonStream: JSONStream;
   protected kubeNode: KubeNode;
@@ -25,10 +34,9 @@ export default class Ingress extends Resource {
   /**
    * kubernetes hosts
    */
-  constructor(logger: Logger, kubeNode: KubeNode, kubeClient, icinga: Icinga, jsonStream: JSONStream, options) {
+  constructor(logger: Logger, kubeNode: KubeNode, icinga: Icinga, jsonStream: JSONStream, options: IngressOptions) {
     super();
     this.logger = logger;
-    this.kubeClient = kubeClient;
     this.icinga = icinga;
     this.jsonStream = jsonStream;
     this.kubeNode = kubeNode;
@@ -71,8 +79,9 @@ export default class Ingress extends Resource {
    * Preapre icinga object and apply
    */
   public async prepareObject(definition: any): Promise<any> {
+    let hostname = this.escapeName(['ingress', definition.metadata.namespace, definition.metadata.name].join('-'));
     if (!this.options.attachToNodes) {
-      await this.applyHost(definition.metadata.name, definition.metadata.name, definition, this.options.hostTemplates);
+      await this.applyHost(hostname, definition.metadata.name, definition, this.options.hostTemplates);
     }
 
     let service = this.prepareResource(definition);
@@ -85,9 +94,10 @@ export default class Ingress extends Resource {
       for (const spec of definition.spec.rules) {
         for (const path of spec.http.paths) {
           let base = path.path || '/';
+          let name = this.escapeName([spec.host, 'http', base].join('-'));   
           let addition = {
             'check_command': 'http',
-            'display_name': `${spec.host}:http`,
+            'display_name': `${spec.host}${base}:http`,
             'vars._kubernetes': true,
             'vars.kubernetes': definition,
             'vars.http_address': spec.host,
@@ -99,13 +109,14 @@ export default class Ingress extends Resource {
 
           Object.assign(addition, this.options.serviceDefinition);
           Object.assign(addition, service);
-          this.applyService(definition.metadata.name, addition.display_name, addition, templates);
+          this.applyService(hostname, name, addition, templates);
 
           // tls secret set, also apply https service
           if (definition.spec.tls) {
+            name = this.escapeName([spec.host, 'https', base].join('-'));   
             addition.display_name += 's';
             addition['vars.http_ssl'] = true;
-            this.applyService(definition.metadata.name, addition.display_name, addition, templates);
+            this.applyService(hostname, name, addition, templates);
           }
         }
       }
@@ -115,9 +126,9 @@ export default class Ingress extends Resource {
   /**
    * Start kube listener
    */
-  public async kubeListener(): Promise<any> {
+  public async kubeListener(provider) {
     try {
-      const stream = this.kubeClient.apis.extensions.v1beta1.watch.ingresses.getStream();
+      var stream = provider();
       stream.pipe(this.jsonStream);
       this.jsonStream.on('data', async (object) => {
         this.logger.debug('received kubernetes ingress resource', {object});
@@ -139,7 +150,7 @@ export default class Ingress extends Resource {
       });
 
       this.jsonStream.on('finish', () => {
-        this.kubeListener();
+        this.kubeListener(provider);
       });
     } catch (err) {
       this.logger.error('failed start ingresses listener', {error: err});

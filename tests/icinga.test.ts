@@ -9,10 +9,10 @@
   public async cleanup(): Promise<any> {
 */
 import * as IcingaApi from 'icinga2-api';
-import IcingaClient from '../../src/icinga';
-import Logger from '../../src/logger';
+import IcingaClient from '../src/icinga';
+import Logger from '../src/logger';
 jest.mock('icinga2-api');
-jest.mock('../../src/logger');
+jest.mock('../src/logger');
 var icinga;
 
 beforeEach(() => {
@@ -328,6 +328,52 @@ describe('icinga', () => {
       expect(calls.length).toBe(1);
       expect(calls[0][1]).toBe('foobar');
       expect(calls[0][2]).toBe('bar');
+    });
+  });
+
+  describe('delete service', () => {
+    it('delete service successfully', async () => {
+      IcingaApi.deleteService = jest.fn()
+        .mockImplementation((host, service, cb) => cb(null, {foo: "bar"}));
+
+      await expect(icinga.deleteService('foo', 'bar')).resolves.toEqual(true); 
+      const calls = IcingaApi.deleteService.mock.calls;
+      expect(calls.length).toBe(1);
+      expect(calls[0][0]).toBe('bar');
+      expect(calls[0][1]).toBe('foo');
+    });
+
+    it('delete service failed', async () => {
+      IcingaApi.deleteService = jest.fn()
+        .mockImplementation((host, service, cb) => cb({Statuscode: 500}, null));
+
+      await expect(icinga.deleteService('foo', 'bar')).resolves.toEqual(false); 
+      const calls = IcingaApi.deleteService.mock.calls;
+      expect(calls.length).toBe(1);
+      expect(calls[0][0]).toBe('bar');
+      expect(calls[0][1]).toBe('foo');
+    });
+  });
+
+  describe('delete host', () => {
+    it('delete host successfully', async () => {
+      IcingaApi.deleteHost = jest.fn()
+        .mockImplementation((host, cb) => cb(null, {foo: "bar"}));
+
+      await expect(icinga.deleteHost('bar')).resolves.toEqual(true); 
+      const calls = IcingaApi.deleteHost.mock.calls;
+      expect(calls.length).toBe(1);
+      expect(calls[0][0]).toBe('bar');
+    });
+
+    it('delete host failed', async () => {
+      IcingaApi.deleteHost = jest.fn()
+        .mockImplementation((host, cb) => cb({Statuscode: 500}, null));
+
+      await expect(icinga.deleteHost('bar')).resolves.toEqual(false); 
+      const calls = IcingaApi.deleteHost.mock.calls;
+      expect(calls.length).toBe(1);
+      expect(calls[0][0]).toBe('bar');
     });
   });
 });

@@ -11,6 +11,10 @@
 * [BREAKER!] Removed service.portNameAsCommand option, use kubernetes annotations
 * [FEATURE] Discover persistent volumes and create icinga services for those #4
 * [FIX] Fixed typo Definiton => Definition in default config example
+* [CHANGE] Added various new tests
+* [FIX] kube workes are in no namespace, remove icinga groups
+* [FIX] fixed Error: Invalid attribute specified: host_name\n for kube nodes
+* [FIX] fixed duplicate ingress objects (different path, same ingress names in different namespaces, ...)
 
 
 ## 1.0.1

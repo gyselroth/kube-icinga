@@ -6,9 +6,8 @@ services:
     # Set your hostname to the FQDN under which your
     # sattelites will reach this container
     hostname: icinga2
-    env_file:
-      - secrets_sql.env
     environment:
+      - MYSQL_ROOT_PASSWORD=<password>
       - ICINGA2_FEATURE_GRAPHITE=1
       # Important:
       # keep the hostname graphite the same as
@@ -55,8 +54,8 @@ services:
       - ./data/graphite/log/carbon:/var/log/carbon
   mysql:
     image: mariadb:10.1
-    env_file:
-      - secrets_sql.env
+    environment:
+    - MYSQL_ROOT_PASSWORD=<password>
     volumes:
       - ./data/mysql/data:/var/lib/mysql
       # If you have previously used the container's internal DB use:

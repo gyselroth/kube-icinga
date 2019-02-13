@@ -3,17 +3,22 @@ import Icinga from '../icinga';
 import JSONStream from 'json-stream';
 import Resource from './abstract.resource';
 
+interface NodeOptions {
+  discover?: boolean;
+  hostDefinition?: object;
+  hostTemplates?: string[];
+}
+
 /**
  * kubernetes hosts
  */
 export default class Node extends Resource {
   protected logger: Logger;
-  protected kubeClient;
   protected icinga: Icinga;
   protected jsonStream: JSONStream;
   protected nodes: string[] = [];
-  protected options = {
-    discovery: true,
+  protected options: NodeOptions = {
+    discover: true,
     hostDefinition: {},
     hostTemplates: [],
   };
@@ -21,10 +26,9 @@ export default class Node extends Resource {
   /**
    * kubernetes hosts
    */
-  constructor(logger: Logger, kubeClient, icinga: Icinga, jsonStream: JSONStream, options) {
+  constructor(logger: Logger, icinga: Icinga, jsonStream: JSONStream, options: NodeOptions) {
     super();
     this.logger = logger;
-    this.kubeClient = kubeClient;
     this.icinga = icinga;
     this.jsonStream = jsonStream;
     this.options = Object.assign(this.options, options);
@@ -33,22 +37,22 @@ export default class Node extends Resource {
   /**
    * Preapre icinga object and apply
    */
-  protected async prepareObject(definition: any): Promise<boolean> {
+  public async prepareObject(definition: any): Promise<boolean> {
     let host = {
       'display_name': definition.metadata.name,
-      'host_name': definition.metadata.name,
+      'address': definition.metadata.name,
       'vars._kubernetes': true,
       'vars.kubernetes': definition,
-      'groups': [definition.metadata.namespace],
+      'check_command': 'ping', 
     };
 
     if (!definition.spec.unschedulable) {
       this.logger.debug('skip kube worker node '+definition.metadata.name+' since it is flagged as unschedulable');
       this.nodes.push(definition.metadata.name);
     }
-
-    host = Object.assign(host, this.options.hostDefinition);
-    return this.icinga.applyHost(host.host_name, host, this.options.hostTemplates);
+    
+    Object.assign(host, this.options.hostDefinition);
+    return this.icinga.applyHost(definition.metadata.name, host, this.options.hostTemplates);
   }
 
   /**
@@ -61,9 +65,9 @@ export default class Node extends Resource {
   /**
    * Start kube listener
    */
-  public async kubeListener(): Promise<any> {
+  public async kubeListener(provider) {
     try {
-      const stream = this.kubeClient.apis.v1.watch.nodes.getStream();
+      const stream = provider();
       stream.pipe(this.jsonStream);
       this.jsonStream.on('data', async (object) => {
         // ignore MODIFIER for kube nodes
@@ -89,7 +93,7 @@ export default class Node extends Resource {
       });
 
       this.jsonStream.on('finish', () => {
-        this.kubeListener();
+        this.kubeListener(provider);
       });
     } catch (err) {
       this.logger.error('failed start nodes listener', {error: err});

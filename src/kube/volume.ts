@@ -4,12 +4,21 @@ import JSONStream from 'json-stream';
 import KubeNode from './node';
 import Resource from './abstract.resource';
 
+interface VolumeOptions {
+  discover?: boolean;
+  applyServices?: boolean;
+  attachToNodes?: boolean;
+  hostDefinition?: object;
+  serviceDefinition?: object;
+  hostTemplates?: string[];
+  serviceTemplates?: string[];
+}
+
 /**
  * kubernetes ingresses
  */
 export default class Volume extends Resource {
   protected logger: Logger;
-  protected kubeClient;
   protected icinga: Icinga;
   protected jsonStream: JSONStream;
   protected kubeNode: KubeNode;
@@ -25,10 +34,9 @@ export default class Volume extends Resource {
   /**
    * kubernetes hosts
    */
-  constructor(logger: Logger, kubeNode: KubeNode, kubeClient, icinga: Icinga, jsonStream: JSONStream, options) {
+  constructor(logger: Logger, kubeNode: KubeNode, icinga: Icinga, jsonStream: JSONStream, options: VolumeOptions) {
     super();
     this.logger = logger;
-    this.kubeClient = kubeClient;
     this.icinga = icinga;
     this.jsonStream = jsonStream;
     this.kubeNode = kubeNode;
@@ -71,8 +79,8 @@ export default class Volume extends Resource {
    * Preapre icinga object and apply
    */
   public async prepareObject(definition: any): Promise<any> {
-    var host = this.escapeName(definition.metadata.annotations['pv.kubernetes.io/provisioned-by']);
-    await this.applyHost(host, host, definition, this.options.hostTemplates);
+    var hostname = this.escapeName(definition.metadata.annotations['pv.kubernetes.io/provisioned-by']);
+    await this.applyHost(hostname, hostname, definition, this.options.hostTemplates);
 
     if (this.options.applyServices) {
       var groups = [];
@@ -85,7 +93,7 @@ export default class Volume extends Resource {
       templates = templates.concat(this.prepareTemplates(definition));
 
       let service = this.options.serviceDefinition;
-      let name = this.escapeName(definition.metadata.name);
+      let name = this.escapeName(['volume', definition.metadata.name].join('-'));
       let addition = {
         'check_command': 'dummy',
         'display_name': `${definition.metadata.name}:volume`,
@@ -96,16 +104,16 @@ export default class Volume extends Resource {
 
       Object.assign(addition, service);
       Object.assign(addition, this.prepareResource(definition));
-      this.applyService(host, name, addition, templates);
+      this.applyService(hostname, name, addition, templates);
     }
   }
 
   /**
    * Start kube listener
    */
-  public async kubeListener(): Promise<any> {
+  public async kubeListener(provider) {
     try {
-      const stream = this.kubeClient.apis.v1.watch.persistentvolumes.getStream();
+      var stream = provider();
       stream.pipe(this.jsonStream);
       this.jsonStream.on('data', async (object) => {
         this.logger.debug('received kubernetes persistent volume resource', {object});
@@ -127,7 +135,7 @@ export default class Volume extends Resource {
       });
 
       this.jsonStream.on('finish', () => {
-        this.kubeListener();
+        this.kubeListener(provider);
       });
     } catch (err) {
       this.logger.error('failed start ingresses listener', {error: err});

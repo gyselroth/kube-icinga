@@ -8,9 +8,16 @@ kube-icinga automatically deploys icinga objects out of your kubernetes resource
 It has built-in autodiscovery and will work out of the box. However you can change various default configurations and deploy 
 custom icinga objects or disable/enable kubernetes objects to monitor.
 
+## Features
+
+* Autodiscovery
+* Icinga servicegroup support
+* Create services for kubernetes nodes, services, ingresses and persistent volumes
+* Completely customizable per resurce or per resource type
+
 ## How does it work?
 
-Multiple watchers are bootstraped and listen for any kubernetes changes. Those changes will reflect immediately on icinga.
+Multiple watchers are bootstraped and listen for any kubernetes changes. Those changes will reflect immediately on your icinga environment.
 
 * Kubernetes namespaces will result in icinga service groups and host groups
 * Nodes will result in host objects 
@@ -19,6 +26,7 @@ Multiple watchers are bootstraped and listen for any kubernetes changes. Those c
 * Persistent volumes will result in services attached to a dummy host
 
 >**Note**: [1] You may change this behaviour by attaching the services (ingress paths) to all kubernetes worker nodes by setting `kubernetes.ingresses.attachToNodes` to `true`. (This will result in many more services and checks depending on the size of your cluster!)
+
 >**Note**: [2] NodePort services will always be attached to each kubernetes worker node. See [NodePort](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport) services for more information.
 
 Since there is no such thing as hosts in the world of moving and containers. The host object (kubernetes metadata.name) on icinga may just be a [dummy](https://www.icinga.com/docs/icinga2/latest/doc/10-icinga-template-library/#plugin-check-command-dummy) and will not get checked
@@ -62,19 +70,34 @@ kubectl -f https://raw.githubusercontent.com/gyselroth/kube-icinga/master/kube-i
 ```
 (Change the secret password and ICINGA_ADDRESS value accordingly)
 
+>**Note**: kube-icinga will be created as single pod deployment in the kubernetes kube-system namespace. You may changes this behaviour.
+
+### Resource visibility
+The resource yaml also contains a new cluster role `kube-icinga`. kube-icinga will create icinga objects for all visible namespaces which are by default all namespaces since it is a kubernetes cluster role.
+You may specify resources visibile to kube-icinga with custom RBAC rules.
 
 ## Advanced topics
 
 ### ClusterIP services
-Ingresses, NodePort and Load Balancer services will expose your kubernetes services to the public but not ClusterIP services. ClusterIP services (Which is the default) are only internal kubernetes services and not available from outside the cluster. If your icinga2 setup lives outside the cluster you only have to options, either disable deployment for those objects or setup an icinga [satelite](https://www.icinga.com/docs/icinga2/latest/doc/06-distributed-monitoring) container which will live in kubernetes. Of course you may also deploy an entire icinga2 setup on kubernetes if you do not have an existing one.
+Ingresses, NodePort and Load Balancer services will expose your kubernetes services to the public but not ClusterIP services. ClusterIP services (Which is the default) are only internal kubernetes services and not available from outside the cluster. If your icinga2 setup lives outside the cluster you only have two options, either disable deployment for those objects or setup an icinga [satelite](https://www.icinga.com/docs/icinga2/latest/doc/06-distributed-monitoring) container which will live on kubernetes. Of course you may also deploy an entire icinga2 setup on kubernetes if you do not have an existing one.
 
 ### Using icinga2 apply rules
-You certainly can use icinga2 apply rules. You may disable auto service deployments via `applyServices` for ingresses and services and define your own services via [apply rules](https://www.icinga.com/docs/icinga2/latest/doc/03-monitoring-basics/#using-apply).
+You certainly can use icinga2 apply rules. You may disable auto service deployments via `applyServices` for ingresses, services and volumes and define your own services via [apply rules](https://www.icinga.com/docs/icinga2/latest/doc/03-monitoring-basics/#using-apply).
 Of course you can also setup a mixed deployment. Automatically let kube-icinga deploy services and apply additional services via apply rules. 
 
 >**Note**: Since icinga apply rules are [not triggered](https://www.icinga.com/docs/icinga2/latest/doc/12-icinga2-api/#modifying-objects) if an object gets updated kube-icinga will delete and recreate those objects. 
 
-All icinga host object are created with all kubernetes data available packed in the variable `vars.kubernetes`. Therefore you can apply rules with this data, for example this will create an icinga service for all objects with a kubernetes label foo=bar.
+All icinga host objects are created with all kubernetes data available packed in the variable `vars.kubernetes`. Therefore you may apply rules with this data.
+
+For example kube-icinga will create a icinga host object for a kubernetes service:
+```
+
+```
+
+You may use this data to dynamically create icinga apply rules:
+```
+```
+
 
 ### Globally overwrite icinga object definitions
 It is possible to set custom options for the icinga objects during creation. You might set custom values via `kubernetes.ingresses.hostTemplates` or kubernetes.ingresses.serviceTemplate`. The same can also be done for services. For example it might be crucial to set a custom zone for ClusterIP services since they are only reachable within the cluster and shall be monitored by an icinga satelite node. Any valid setting for a specific icinga object can be set.
@@ -101,9 +124,13 @@ you may configure custom incinga attributes directly in the kubernetes resource 
 ### Overwrite icinga object definitions directly in kubernetes resources
 
 kube-icinga is able to parse kubernetes annotations and merge those with its default settings.
+
+>**Note**: With annotations you may set specific settings for each kubernetes resources while configure options for kube-icinga set settings on a resource type basis.
+
 You may use the following annotations:
 
 | Name | Description |
+|-------|------------|
 | `kube-icinga/check_command` | Use a custom icinga check command. |
 | `kube-icinga/template` | Use a custom icinga template. |
 | `kube-icinga/definition` | JSON encoded icinga definiton which may contain advanced icinga options and gets merged with the defaults. |
