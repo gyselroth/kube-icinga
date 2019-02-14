@@ -43,14 +43,14 @@ export default class Node extends Resource {
       'address': definition.metadata.name,
       'vars._kubernetes': true,
       'vars.kubernetes': definition,
-      'check_command': 'ping', 
+      'check_command': 'ping',
     };
 
     if (!definition.spec.unschedulable) {
       this.logger.debug('skip kube worker node '+definition.metadata.name+' since it is flagged as unschedulable');
       this.nodes.push(definition.metadata.name);
     }
-    
+
     Object.assign(host, this.options.hostDefinition);
     return this.icinga.applyHost(definition.metadata.name, host, this.options.hostTemplates);
   }
@@ -76,7 +76,7 @@ export default class Node extends Resource {
         }
 
         this.logger.debug('received kubernetes host resource', {object});
-        if(object.object.kind !== 'Node') {
+        if (object.object.kind !== 'Node') {
           this.logger.error('skip invalid node object', {object: object});
           return;
         }
@@ -86,7 +86,7 @@ export default class Node extends Resource {
         }
 
         if (object.type == 'ADDED') {
-          this.prepareObject(object.object).catch(err => {
+          this.prepareObject(object.object).catch((err) => {
             this.logger.error('failed to handle resource', {error: err});
           });
         }

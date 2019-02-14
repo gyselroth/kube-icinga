@@ -105,9 +105,7 @@ describe('icinga', () => {
       IcingaApi.getHostGroup = jest.fn()
         .mockImplementation((hostgroup, cb) => cb({Statuscode: 404}, null));
 
-      await expect(icinga.applyHostGroup('foobar')).rejects.toEqual({
-        Statuscode: 500
-      });
+      await expect(icinga.applyHostGroup('foobar')).resolves.toEqual(false);
 
       var calls = IcingaApi.getHostGroup.mock.calls;
       expect(calls.length).toBe(1);
@@ -170,9 +168,7 @@ describe('icinga', () => {
       IcingaApi.getServiceGroup = jest.fn()
         .mockImplementation((ServiceGroup, cb) => cb({Statuscode: 404}, null));
 
-      await expect(icinga.applyServiceGroup('foobar')).rejects.toEqual({
-        Statuscode: 500
-      });
+      await expect(icinga.applyServiceGroup('foobar')).resolves.toEqual(false);
 
       var calls = IcingaApi.getServiceGroup.mock.calls;
       expect(calls.length).toBe(1);
@@ -242,9 +238,7 @@ describe('icinga', () => {
       IcingaApi.getHostState = jest.fn()
         .mockImplementation((Host, cb) => cb({Statuscode: 404}, null));
 
-      await expect(icinga.applyHost('foobar')).rejects.toEqual({
-        Statuscode: 500
-      });
+      await expect(icinga.applyHost('foobar')).resolves.toEqual(false);
 
       var calls = IcingaApi.getHostState.mock.calls;
       expect(calls.length).toBe(1);
@@ -315,9 +309,7 @@ describe('icinga', () => {
       IcingaApi.getService = jest.fn()
         .mockImplementation((host, service, cb) => cb({Statuscode: 404}, null));
 
-      await expect(icinga.applyService('foobar', 'bar')).rejects.toEqual({
-        Statuscode: 500
-      });
+      await expect(icinga.applyService('foobar', 'bar')).resolves.toEqual(false);
 
       var calls = IcingaApi.getService.mock.calls;
       expect(calls.length).toBe(1);

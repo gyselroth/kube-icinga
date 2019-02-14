@@ -34,7 +34,7 @@
     },
     "services": {
       "ClusterIP": {
-        "discover": true,
+        "discover": false,
         "hostDefinition": {},
         "serviceTemplates": ["generic-service"],
         "hostTemplates": ["generic-host"],

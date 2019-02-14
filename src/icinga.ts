@@ -50,10 +50,10 @@ export default class Icinga {
             this.icingaClient.createHostGroup(name, name, [], (err, result) => {
               if (err) {
                 this.logger.error(`failed create host group ${name}`, {error: err});
-                reject(err);
+                resolve(false);
               } else {
                 this.logger.info(`host group ${name} was created successfully`, {result: result});
-                resolve(true);  
+                resolve(true);
               }
             });
           } else {
@@ -81,10 +81,10 @@ export default class Icinga {
             this.icingaClient.createServiceGroup(name, name, [], (err, result) => {
               if (err) {
                 this.logger.error(`failed create service group ${name}`, {error: err});
-                reject(err); 
+                resolve(false);
               } else {
                 this.logger.info(`service group ${name} was created successfully`, {result: result});
-                resolve(true); 
+                resolve(true);
               }
             });
           } else {
@@ -117,7 +117,7 @@ export default class Icinga {
             this.icingaClient.createHostCustom(JSON.stringify(host), name, (err, result) => {
               if (err) {
                 this.logger.error(`failed create host ${name}`, {error: err});
-                reject(err);
+                resolve(false);
               } else {
                 this.logger.info(`host ${name} was created successfully`, {result: result});
                 resolve(true);
@@ -153,7 +153,7 @@ export default class Icinga {
             this.icingaClient.createServiceCustom(JSON.stringify(service), host, name, (err, result) => {
               if (err) {
                 this.logger.error(`failed create service ${name} on host ${host}`, {error: err});
-                reject(err);
+                resolve(false);
               } else {
                 this.logger.info(`service ${name} on host ${host} was created successfully`, {result: result});
                 resolve(true);
@@ -215,11 +215,11 @@ export default class Icinga {
 
     return new Promise((resolve, reject) => {
       this.icingaClient.getServiceFiltered({filter: 'service.vars._kubernetes == true'}, async (err, result) => {
-        if(err) {
+        if (err) {
           return reject(err);
         }
 
-        var handlers = [];
+        let handlers = [];
         for (const service of result) {
           handlers.push(this.deleteService(service.attrs.host_name, service.attrs.name));
         }
@@ -229,11 +229,11 @@ export default class Icinga {
       });
 
       this.icingaClient.getHostFiltered({filter: 'host.vars._kubernetes == true'}, async (err, result) => {
-        if(err) {
+        if (err) {
           return reject(err);
         }
 
-        var handlers = [];
+        let handlers = [];
         for (const host of result) {
           handlers.push(this.deleteHost(host.attrs.name));
         }

@@ -41,7 +41,7 @@ export default class Ingress extends Resource {
     this.jsonStream = jsonStream;
     this.kubeNode = kubeNode;
     this.options = Object.assign(this.options, options);
-  }  
+  }
 
   /**
    * Apply host
@@ -85,7 +85,7 @@ export default class Ingress extends Resource {
     }
 
     let service = this.prepareResource(definition);
-    var templates = this.options.serviceTemplates;
+    let templates = this.options.serviceTemplates;
     templates = templates.concat(this.prepareTemplates(definition));
 
     if (this.options.applyServices) {
@@ -94,7 +94,7 @@ export default class Ingress extends Resource {
       for (const spec of definition.spec.rules) {
         for (const path of spec.http.paths) {
           let base = path.path || '/';
-          let name = this.escapeName([spec.host, 'http', base].join('-'));   
+          let name = this.escapeName([spec.host, 'http', base].join('-'));
           let addition = {
             'check_command': 'http',
             'display_name': `${spec.host}${base}:http`,
@@ -113,7 +113,7 @@ export default class Ingress extends Resource {
 
           // tls secret set, also apply https service
           if (definition.spec.tls) {
-            name = this.escapeName([spec.host, 'https', base].join('-'));   
+            name = this.escapeName([spec.host, 'https', base].join('-'));
             addition.display_name += 's';
             addition['vars.http_ssl'] = true;
             this.applyService(hostname, name, addition, templates);
@@ -128,12 +128,12 @@ export default class Ingress extends Resource {
    */
   public async kubeListener(provider) {
     try {
-      var stream = provider();
+      let stream = provider();
       stream.pipe(this.jsonStream);
       this.jsonStream.on('data', async (object) => {
         this.logger.debug('received kubernetes ingress resource', {object});
 
-        if(object.object.kind !== 'Ingress') {
+        if (object.object.kind !== 'Ingress') {
           this.logger.error('skip invalid ingress object', {object: object});
           return;
         }
@@ -143,8 +143,8 @@ export default class Ingress extends Resource {
         }
 
         if (object.type == 'ADDED' || object.type == 'MODIFIED') {
-          this.prepareObject(object.object).catch(err => {
-            this.logger.error('failed to handle resource', {error: err})
+          this.prepareObject(object.object).catch((err) => {
+            this.logger.error('failed to handle resource', {error: err});
           });
         }
       });

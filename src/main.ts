@@ -20,23 +20,23 @@ const kubeVolume = new Volume(logger, kubeNode, icinga, new JSONStream(), config
  */
 async function main() {
   if (config.cleanup) {
-    await icinga.cleanup().catch(err => {
+    await icinga.cleanup().catch((err) => {
       logger.error('failed to cleanup icinga objects', {error: err});
     });
   }
-
+  /*
   if (config.kubernetes.nodes.discover) {
     kubeNode.kubeListener(() => {
       return kubeClient.apis.v1.watch.nodes.getStream();
     });
   }
-  
+
   if (config.kubernetes.ingresses.discover) {
     kubeIngress.kubeListener(() => {
-      return kubeClient.apis.extensions.v1beta1.watch.ingresses.getStream();    
+      return kubeClient.apis.extensions.v1beta1.watch.ingresses.getStream();
     });
   }
-  
+  */
   if (config.kubernetes.volumes.discover) {
     kubeVolume.kubeListener(() => {
       return kubeClient.apis.v1.watch.persistentvolumes.getStream();

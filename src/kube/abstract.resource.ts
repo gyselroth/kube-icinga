@@ -17,22 +17,22 @@ export default abstract class Resource {
    * Prepare icinga object with kube annotations
    */
   protected prepareResource(resource: any): any {
-    var definition: any = {};
+    let definition: any = {};
 
-    if(!resource.metadata.annotations) {
-        return definition;
+    if (!resource.metadata.annotations) {
+      return definition;
     }
 
-    var annotations: any = resource.metadata.annotations;
+    let annotations: any = resource.metadata.annotations;
 
-    if(annotations['kube-icinga/check_command']) {
-      definition.check_command = annotations['kube-icinga/check_command'];  
+    if (annotations['kube-icinga/check_command']) {
+      definition.check_command = annotations['kube-icinga/check_command'];
     }
-    
-    if(annotations['kube-icinga/definition']) {
-      Object.assign(definition, JSON.parse(annotations['kube-icinga/definition']));  
+
+    if (annotations['kube-icinga/definition']) {
+      Object.assign(definition, JSON.parse(annotations['kube-icinga/definition']));
     }
-  
+
     return definition;
   }
 
@@ -40,14 +40,14 @@ export default abstract class Resource {
    * Prepare icinga object with kube annotations
    */
   protected prepareTemplates(resource: any): string[] {
-    if(!resource.metadata.annotations) {
-        return [];
+    if (!resource.metadata.annotations) {
+      return [];
     }
 
-    var annotations: any = resource.metadata.annotations;
-    
-    if(annotations['kube-icinga/templates']) {
-     return annotations['kube-icinga/templates'].split(',');  
+    let annotations: any = resource.metadata.annotations;
+
+    if (annotations['kube-icinga/templates']) {
+      return annotations['kube-icinga/templates'].split(',');
     }
 
     return [];

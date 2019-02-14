@@ -20,30 +20,30 @@ interface ServiceOptions {
 }
 
 const defaults: ServiceOptions = {
-    ClusterIP: {
-      discover: false,
-      applyServices: true,
-      hostDefinition: {},
-      serviceDefinition: {},
-      hostTemplates: [],
-      serviceTemplates: [],
-    },
-    NodePort: {
-      discover: true,
-      applyServices: true,
-      hostDefinition: {},
-      serviceDefinition: {},
-      hostTemplates: [],
-      serviceTemplates: [],
-    },
-    LoadBalancer: {
-      discover: true,
-      applyServices: true,
-      hostDefinition: {},
-      serviceDefinition: {},
-      hostTemplates: [],
-      serviceTemplates: [],
-    },
+  ClusterIP: {
+    discover: false,
+    applyServices: true,
+    hostDefinition: {},
+    serviceDefinition: {},
+    hostTemplates: [],
+    serviceTemplates: [],
+  },
+  NodePort: {
+    discover: true,
+    applyServices: true,
+    hostDefinition: {},
+    serviceDefinition: {},
+    hostTemplates: [],
+    serviceTemplates: [],
+  },
+  LoadBalancer: {
+    discover: true,
+    applyServices: true,
+    hostDefinition: {},
+    serviceDefinition: {},
+    hostTemplates: [],
+    serviceTemplates: [],
+  },
 };
 
 /**
@@ -68,7 +68,7 @@ export default class Service extends Resource {
     this.logger = logger;
     this.icinga = icinga;
     this.jsonStream = jsonStream;
-    var clone = JSON.parse(JSON.stringify(defaults));
+    let clone = JSON.parse(JSON.stringify(defaults));
     Object.assign(clone.ClusterIP, options.ClusterIP);
     Object.assign(clone.NodePort, options.NodePort);
     Object.assign(clone.LoadBalancer, options.LoadBalancer);
@@ -97,7 +97,7 @@ export default class Service extends Resource {
    * Apply service
    */
   protected async applyService(host: string, name: string, type: string, definition, templates: string[]) {
-   if (type === Service.TYPE_NODEPORT) {
+    if (type === Service.TYPE_NODEPORT) {
       for (const node of this.kubeNode.getWorkerNodes()) {
         this.icinga.applyService(node, name, definition, templates);
       }
@@ -113,17 +113,17 @@ export default class Service extends Resource {
   public async prepareObject(definition): Promise<any> {
     let serviceType = definition.spec.type;
 
-    if(!this.options[serviceType]) {
+    if (!this.options[serviceType]) {
       throw new Error('unknown service type provided');
     }
 
-    var options = this.options[serviceType];
-    var service = JSON.parse(JSON.stringify(options.serviceDefinition));
+    let options = this.options[serviceType];
+    let service = JSON.parse(JSON.stringify(options.serviceDefinition));
     service['groups'] = [definition.metadata.namespace];
     Object.assign(service, this.prepareResource(definition));
 
     let hostname = this.escapeName(['service', definition.metadata.namespace, definition.metadata.name].join('-'));
-    var templates = options.serviceTemplates;
+    let templates = options.serviceTemplates;
     templates = templates.concat(this.prepareTemplates(definition));
     if (serviceType !== Service.TYPE_NODEPORT) {
       await this.applyHost(hostname, definition.spec.clusterIP, serviceType, definition, options.hostTemplates);
@@ -140,11 +140,11 @@ export default class Service extends Resource {
             this.logger.debug('service can be checked via check command '+port.check_command);
             port['vars.'+port.check_command+'_port'] = servicePort.nodePort || servicePort.port;
           } else {
-            delete port.check_command;  
+            delete port.check_command;
             this.logger.warn('service can not be checked via check command '+port.check_command+', icinga check command does not exists, fallback to service protocol '+servicePort.protocol);
           }
         }
-        
+
         let protocol = servicePort.protocol.toLowerCase();
         let port_name = servicePort.name || protocol+':'+servicePort.port;
 
@@ -168,12 +168,12 @@ export default class Service extends Resource {
    */
   public async kubeListener(provider) {
     try {
-      var stream = provider(); 
+      let stream = provider();
       stream.pipe(this.jsonStream);
       this.jsonStream.on('data', async (object) => {
         this.logger.debug('received kubernetes service resource', {object});
 
-        if(object.object.kind !== 'Service') {
+        if (object.object.kind !== 'Service') {
           this.logger.error('skip invalid service object', {object: object});
           return;
         }
@@ -188,8 +188,8 @@ export default class Service extends Resource {
         }
 
         if (object.type == 'ADDED' || object.type == 'MODIFIED') {
-          this.prepareObject(object.object).catch(err => {
-            this.logger.error('failed to handle resource', {error: err})
+          this.prepareObject(object.object).catch((err) => {
+            this.logger.error('failed to handle resource', {error: err});
           });
         }
       });

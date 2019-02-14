@@ -41,8 +41,8 @@ export default class Volume extends Resource {
     this.jsonStream = jsonStream;
     this.kubeNode = kubeNode;
     this.options = Object.assign(this.options, options);
-  }  
-  
+  }
+
   /**
    * Apply host
    */
@@ -79,13 +79,13 @@ export default class Volume extends Resource {
    * Preapre icinga object and apply
    */
   public async prepareObject(definition: any): Promise<any> {
-    var hostname = this.escapeName(definition.metadata.annotations['pv.kubernetes.io/provisioned-by']);
+    let hostname = this.escapeName(definition.metadata.annotations['pv.kubernetes.io/provisioned-by']);
     await this.applyHost(hostname, hostname, definition, this.options.hostTemplates);
 
     if (this.options.applyServices) {
-      var groups = [];
-      if(definition.spec.claimRef.namespace) {
-        groups.push(definition.spec.claimRef.namespace)
+      let groups = [];
+      if (definition.spec.claimRef.namespace) {
+        groups.push(definition.spec.claimRef.namespace);
         await this.icinga.applyServiceGroup(definition.spec.claimRef.namespace);
       }
 
@@ -113,12 +113,12 @@ export default class Volume extends Resource {
    */
   public async kubeListener(provider) {
     try {
-      var stream = provider();
+      let stream = provider();
       stream.pipe(this.jsonStream);
       this.jsonStream.on('data', async (object) => {
         this.logger.debug('received kubernetes persistent volume resource', {object});
 
-        if(object.object.kind !== 'PersistentVolume') {
+        if (object.object.kind !== 'PersistentVolume') {
           this.logger.error('skip invalid object', {object: object});
           return;
         }
@@ -128,8 +128,8 @@ export default class Volume extends Resource {
         }
 
         if (object.type == 'ADDED' || object.type == 'MODIFIED') {
-          this.prepareObject(object.object).catch(err => {
-            this.logger.error('failed to handle resource', {error: err})
+          this.prepareObject(object.object).catch((err) => {
+            this.logger.error('failed to handle resource', {error: err});
           });
         }
       });
