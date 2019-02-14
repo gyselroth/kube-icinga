@@ -6,6 +6,7 @@ import Resource from './abstract.resource';
 
 interface ServiceTypeOptions {
   discover?: boolean;
+  hostName?: string;
   applyServices?: boolean;
   hostDefinition?: any;
   serviceDefinition?: any;
@@ -22,6 +23,7 @@ interface ServiceOptions {
 const defaults: ServiceOptions = {
   ClusterIP: {
     discover: false,
+    hostName: "kubernetes-clusterip-services",
     applyServices: true,
     hostDefinition: {},
     serviceDefinition: {},
@@ -30,6 +32,7 @@ const defaults: ServiceOptions = {
   },
   NodePort: {
     discover: true,
+    hostName: "kubernetes-nodeport-services",
     applyServices: true,
     hostDefinition: {},
     serviceDefinition: {},
@@ -38,6 +41,7 @@ const defaults: ServiceOptions = {
   },
   LoadBalancer: {
     discover: true,
+    hostName: "kubernetes-loadbalancer-services",
     applyServices: true,
     hostDefinition: {},
     serviceDefinition: {},
@@ -122,11 +126,13 @@ export default class Service extends Resource {
     service['groups'] = [definition.metadata.namespace];
     Object.assign(service, this.prepareResource(definition));
 
-    let hostname = this.escapeName(['service', definition.metadata.namespace, definition.metadata.name].join('-'));
+    let hostname = this.getHostname(definition);
     let templates = options.serviceTemplates;
     templates = templates.concat(this.prepareTemplates(definition));
+
     if (serviceType !== Service.TYPE_NODEPORT) {
-      await this.applyHost(hostname, definition.spec.clusterIP, serviceType, definition, options.hostTemplates);
+      let address = options.hostName || definition.spec.clusterIP;
+      await this.applyHost(hostname, address, serviceType, definition, options.hostTemplates);
     }
 
     if (options.applyServices) {
@@ -155,12 +161,27 @@ export default class Service extends Resource {
 
         port['vars._kubernetes'] = true;
         port['vars.kubernetes'] = definition;
-        let name = this.escapeName([definition.metadata.name, portName].join('-'));
+        let name = this.escapeName([definition.metadata.namespace, definition.metadata.name, portName].join('-'));
         port['display_name'] = name;
 
         this.applyService(hostname, name, serviceType, port, templates);
       }
     }
+  }
+
+  /**
+   * Get hostname
+   */
+  protected getHostname(definition: any): string {
+    let serviceType = definition.spec.type;
+
+    if(definition.metadata.annotations['kube-icinga/host']) {
+      return definition.metadata.annotations['kube-icinga/host'];
+    } else if(this.options[serviceType].hostName === null) {
+      return this.escapeName(['service', definition.metadata.namespace, definition.metadata.name].join('-'));
+    }
+
+    return this.options[serviceType].hostName;
   }
 
   /**
@@ -184,7 +205,8 @@ export default class Service extends Resource {
         }
 
         if (object.type == 'MODIFIED' || object.type == 'DELETED') {
-          await this.icinga.deleteHost(object.object.metadata.name);
+          let hostname = this.getHostname(object.object);
+          await this.icinga.deleteHost(hostname);
         }
 
         if (object.type == 'ADDED' || object.type == 'MODIFIED') {

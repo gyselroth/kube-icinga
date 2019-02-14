@@ -26,19 +26,19 @@ async function main() {
   }
 
   if (config.kubernetes.nodes.discover) {
-    kubeNode.kubeListener(() => {
+    kubeNode.kubeListener(function() {
       return kubeClient.apis.v1.watch.nodes.getStream();
     });
   }
 
   if (config.kubernetes.ingresses.discover) {
-    kubeIngress.kubeListener(() => {
+    kubeIngress.kubeListener(function() {
       return kubeClient.apis.extensions.v1beta1.watch.ingresses.getStream();
     });
   }
 
   if (config.kubernetes.volumes.discover) {
-    kubeVolume.kubeListener(() => {
+    kubeVolume.kubeListener(function() {
       return kubeClient.apis.v1.watch.persistentvolumes.getStream();
     });
   }
@@ -46,7 +46,7 @@ async function main() {
   if (config.kubernetes.services.ClusterIP.discover
   || config.kubernetes.services.NodePort.discover
   || config.kubernetes.services.LoadBalancer.discover) {
-    kubeService.kubeListener(() => {
+    kubeService.kubeListener(function() {
       return kubeClient.apis.v1.watch.services.getStream();
     });
   }

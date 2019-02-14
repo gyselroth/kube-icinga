@@ -1,4 +1,4 @@
-import Ingress from '../../src/kube/ingress'; 
+import Volume from '../../src/kube/volume'; 
 import Node from '../../src/kube/node'; 
 import Icinga from '../../src/icinga';
 import {LoggerInstance} from 'winston'; 
@@ -8,46 +8,41 @@ jest.mock('json-stream');
 jest.mock('kubernetes-client');
 
 const template = {
-    "apiVersion": "extensions/v1beta1",
-    "kind": "Ingress",
+    "apiVersion": "v1",
+    "kind": "PersistentVolume",
     "metadata": {
-        "annotations": {},
-        "name": "foo",
-        "namespace": "foobar",
+        "annotations": {
+            "hpe.com/docker-volume-name": "generic-nimble-fad5684e-22fb-11e9-94e3-0050568fe3c2",
+            "pv.kubernetes.io/provisioned-by": "hpe.com/nimble",
+            "volume.beta.kubernetes.io/storage-class": "generic-nimble"
+        },
+        "name": "generic-nimble-fad5684e-22fb-11e9-94e3-0050568fe3c2",
     },
     "spec": {
-        "rules": [
-            {
-                "host": "foobar.example.org",
-                "http": {
-                    "paths": [
-                        {
-                            "backend": {
-                                "serviceName": "foo-backend",
-                                "servicePort": 80
-                            }
-                        }
-                    ]
-                }
-            },
-            {
-                "host": "barfoo.example.org",
-                "http": {
-                    "paths": [
-                        {
-                            "path": "/foo",
-                            "backend": {
-                                "serviceName": "foo-backend",
-                                "servicePort": 80
-                            }
-                        }
-                    ]
-                }
+        "accessModes": [
+            "ReadWriteOnce"
+        ],
+        "capacity": {
+            "storage": "50Gi"
+        },
+        "claimRef": {
+            "apiVersion": "v1",
+            "kind": "PersistentVolumeClaim",
+            "name": "nimbletestpvc-006",
+            "namespace": "foobar"
+        },
+        "flexVolume": {
+            "driver": "hpe.com/nimble",
+            "options": {
+                "name": "generic-nimble-fad5684e-22fb-11e9-94e3-0050568fe3c2",
+                "thick": "false"
             }
-        ]
+        },
+        "persistentVolumeReclaimPolicy": "Delete",
+        "storageClassName": "generic-nimble"
     },
     "status": {
-        "loadBalancer": {}
+        "phase": "Bound"
     }
 };
 
@@ -57,37 +52,37 @@ beforeEach(() => {
   fixture = JSON.parse(JSON.stringify(template));
 });
 
-describe('kubernetes ingresses', () => {
-  var instance: Ingress;
+describe('kubernetes volumes', () => {
+  var instance: Volume;
 
-  describe('add ingress object with dummy host', () => {
+  describe('add volume object with dummy host', () => {
     it('create icinga host object', () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream, {
         applyServices: false
       });
       Icinga.applyHost = jest.fn();
       instance.prepareObject(fixture);  
       const call = Icinga.applyHost.mock.calls[0];
-      expect(call[0]).toBe('kubernetes-ingresses');
-      expect(call[1].display_name).toBe('kubernetes-ingresses');
+      expect(call[0]).toBe('kubernetes-volumes');
+      expect(call[1].display_name).toBe('kubernetes-volumes');
       expect(call[1].check_command).toBe('dummy');
     });
     
     it('create icinga host object with dynamic host', () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream, {
         applyServices: false,
         hostName: null
       });
       Icinga.applyHost = jest.fn();
       instance.prepareObject(fixture);  
       const call = Icinga.applyHost.mock.calls[0];
-      expect(call[0]).toBe('ingress-foobar-foo');
-      expect(call[1].display_name).toBe('ingress-foobar-foo');
+      expect(call[0]).toBe('volume-generic-nimble-fad5684e-22fb-11e9-94e3-0050568fe3c2');
+      expect(call[1].display_name).toBe('volume-generic-nimble-fad5684e-22fb-11e9-94e3-0050568fe3c2');
       expect(call[1].check_command).toBe('dummy');
     });
 
     it('create icinga host object with custom definitions', () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream, {
         applyServices: false,
         hostDefinition: {
           'vars.foo': 'bar',
@@ -103,7 +98,7 @@ describe('kubernetes ingresses', () => {
     });
 
     it('create icinga host object with templates', () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream, {
         applyServices: false,
         hostTemplates: ['foo', 'bar']
       });
@@ -115,7 +110,7 @@ describe('kubernetes ingresses', () => {
     });
 
     it('do not create icinga host object while attachToNodes is enabled', () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream, {
         applyServices: false,
         attachToNodes: true
       });
@@ -126,9 +121,9 @@ describe('kubernetes ingresses', () => {
     });
   });
   
-  describe('add ingress object namespace as service group', () => {
+  describe('add volume object namespace as service group', () => {
     it('create service group per default', async () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream);
+      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream);
 
       Icinga.applyHost = jest.fn();
       Icinga.applyService = jest.fn();
@@ -139,7 +134,7 @@ describe('kubernetes ingresses', () => {
     });
     
     it('do not create servicegroup if applyServices is disabled', () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream, {
         applyServices: false
       });
 
@@ -150,25 +145,21 @@ describe('kubernetes ingresses', () => {
     });
   });
 
-  describe('add all ingress object http path rules as service objects', () => {
-    it('create all service objects', async () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream);
+  describe('add all volume object http path rules as service objects', () => {
+    it('create service object', async () => {
+      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream);
 
       Icinga.applyServiceGroup = jest.fn();
       Icinga.applyService = jest.fn();
       await instance.prepareObject(fixture);  
       const calls = Icinga.applyService.mock.calls;
-      expect(Icinga.applyService.mock.instances.length).toBe(2);
-      expect(calls[0][0]).toBe('kubernetes-ingresses');
-      expect(calls[1][0]).toBe('kubernetes-ingresses');
-      expect(calls[0][1]).toBe('foobar.example.org-http--');
-      expect(calls[1][1]).toBe('barfoo.example.org-http--foo');
-      expect(calls[0][2]['vars.http_path']).toBe('/');
-      expect(calls[1][2]['vars.http_path']).toBe('/foo');
+      expect(Icinga.applyService.mock.instances.length).toBe(1);
+      expect(calls[0][0]).toBe('kubernetes-volumes');
+      expect(calls[0][1]).toBe('generic-nimble-fad5684e-22fb-11e9-94e3-0050568fe3c2');
     });
     
-    it('create all service objects with dynamic hosts', async () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream, {
+    it('create service object with dynamic host', async () => {
+      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream, {
         hostName: null
       });
 
@@ -176,13 +167,12 @@ describe('kubernetes ingresses', () => {
       Icinga.applyService = jest.fn();
       await instance.prepareObject(fixture);  
       const calls = Icinga.applyService.mock.calls;
-      expect(Icinga.applyService.mock.instances.length).toBe(2);
-      expect(calls[0][0]).toBe('ingress-foobar-foo');
-      expect(calls[1][0]).toBe('ingress-foobar-foo');
+      expect(Icinga.applyService.mock.instances.length).toBe(1);
+      expect(calls[0][0]).toBe('volume-generic-nimble-fad5684e-22fb-11e9-94e3-0050568fe3c2');
     }
 
     it('create all service objects with custom service definition', async () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream, {
         applyServices: true,
         serviceDefinition: {
           'check_command': 'tcp',
@@ -193,15 +183,13 @@ describe('kubernetes ingresses', () => {
       Icinga.applyService = jest.fn();
       await instance.prepareObject(fixture);  
       const calls = Icinga.applyService.mock.calls;
-      expect(Icinga.applyService.mock.instances.length).toBe(2);
+      expect(Icinga.applyService.mock.instances.length).toBe(1);
       expect(calls[0][2].check_command).toBe('tcp');
       expect(calls[0][2]['vars.foo']).toBe('bar');
-      expect(calls[1][2].check_command).toBe('tcp');
-      expect(calls[1][2]['vars.foo']).toBe('bar');
     });
 
     it('create all service objects with templates', async () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream, {
         applyServices: true,
         serviceTemplates: ['foo', 'bar']
       });
@@ -209,35 +197,14 @@ describe('kubernetes ingresses', () => {
       Icinga.applyService = jest.fn();
       await instance.prepareObject(fixture);  
       const calls = Icinga.applyService.mock.calls;
-      expect(Icinga.applyService.mock.instances.length).toBe(2);
+      expect(Icinga.applyService.mock.instances.length).toBe(1);
       expect(calls[0][3]).toEqual(['foo', 'bar']);
-      expect(calls[1][3]).toEqual(['foo', 'bar']);
     });
-
-    it('create service objects for tls enabled ingresses', async () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream, {
-        applyServices: true,
-        serviceTemplates: ['foo', 'bar']
-      });
-
-      fixture.spec.tls = {
-        secretName: 'foo'
-      }
-
-      Icinga.applyService = jest.fn();
-      await instance.prepareObject(fixture);  
-      const calls = Icinga.applyService.mock.calls;
-      expect(Icinga.applyService.mock.instances.length).toBe(4);
-      expect(calls[0][1]).toBe('foobar.example.org-http--');
-      expect(calls[1][1]).toBe('foobar.example.org-https--');
-      expect(calls[1][2]['vars.http_ssl']).toBe(true);
-    });
-
   });
 
   describe('kubernetes annotations', () => {
     it('check_command/templates annotation', async () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream, {
         applyServices: true
       });
 
@@ -248,15 +215,13 @@ describe('kubernetes ingresses', () => {
       Icinga.applyService = jest.fn();
       await instance.prepareObject(fixture);
       const calls = Icinga.applyService.mock.calls;
-      expect(Icinga.applyService.mock.instances.length).toBe(2);
+      expect(Icinga.applyService.mock.instances.length).toBe(1);
       expect(calls[0][2].check_command).toBe('bar');
-      expect(calls[1][2].check_command).toBe('bar');
       expect(calls[0][3]).toEqual(['foobar', 'barfoo']);
-      expect(calls[1][3]).toEqual(['foobar', 'barfoo']);
     });
     
     it('use annotation instead global definition', async () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream, {
         applyServices: true,
         serviceDefinition: {
           check_command: 'foo'
@@ -268,13 +233,12 @@ describe('kubernetes ingresses', () => {
       Icinga.applyService = jest.fn();
       await instance.prepareObject(fixture);
       const calls = Icinga.applyService.mock.calls;
-      expect(Icinga.applyService.mock.instances.length).toBe(2);
+      expect(Icinga.applyService.mock.instances.length).toBe(1);
       expect(calls[0][2].check_command).toBe('bar');
-      expect(calls[1][2].check_command).toBe('bar');
     });
 
     it('definiton merge', async () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream, {
         applyServices: true,
         serviceDefinition: {
           check_command: 'foo'
@@ -286,7 +250,7 @@ describe('kubernetes ingresses', () => {
       Icinga.applyService = jest.fn();
       await instance.prepareObject(fixture);
       const calls = Icinga.applyService.mock.calls;
-      expect(Icinga.applyService.mock.instances.length).toBe(2);
+      expect(Icinga.applyService.mock.instances.length).toBe(1);
       expect(calls[0][2]["check_command"]).toBe('foo');
       expect(calls[0][2]["vars.foo"]).toBe('foobar');
     });

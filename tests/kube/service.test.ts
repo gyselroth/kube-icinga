@@ -52,9 +52,26 @@ beforeEach(() => {
 describe('kubernetes services', () => {
   describe('add service object with dummy host', () => {
     it('create icinga host object', () => {
-      let instance = new Service(Logger, Node, Icinga, {
+      let instance = new Service(Logger, Node, Icinga, JSONStream, {
         ClusterIP: {
-            applyServices: false
+          applyServices: false
+        }
+      });
+
+      Icinga.applyHost = jest.fn();
+      instance.prepareObject(fixture);  
+      const call = Icinga.applyHost.mock.calls[0];
+      expect(call[0]).toBe('kubernetes-clusterip-services');
+      expect(call[1].address).toBe('kubernetes-clusterip-services');
+      expect(call[1].display_name).toBe('kubernetes-clusterip-services');
+      expect(call[1].check_command).toBe('dummy');
+    });
+    
+    it('create dynamic icinga host object', () => {
+      let instance = new Service(Logger, Node, Icinga, JSONStream, {
+        ClusterIP: {
+          hostName: null,
+          applyServices: false
         }
       });
 
@@ -149,15 +166,31 @@ describe('kubernetes services', () => {
       await instance.prepareObject(fixture);  
       const calls = Icinga.applyService.mock.calls;
       expect(Icinga.applyService.mock.instances.length).toBe(2);
-      expect(calls[0][0]).toBe('service-foobar-foo');
-      expect(calls[1][0]).toBe('service-foobar-foo');
-      expect(calls[0][1]).toBe('foo-http');
-      expect(calls[1][1]).toBe('foo-bar');
+      expect(calls[0][0]).toBe('kubernetes-clusterip-services');
+      expect(calls[1][0]).toBe('kubernetes-clusterip-services');
+      expect(calls[0][1]).toBe('foobar-foo-http');
+      expect(calls[1][1]).toBe('foobar-foo-bar');
 
       expect(calls[0][2]['check_command']).toBe('tcp');
       expect(calls[0][2]['vars.tcp_port']).toBe(80);
       expect(calls[1][2]['check_command']).toBe('tcp');
       expect(calls[1][2]['vars.tcp_port']).toBe(10000);
+    });
+    
+    it('create all service objects with dynamic hosts', async () => {
+      let instance = new Service(Logger, Node, Icinga, JSONStream, {
+        ClusterIP: {
+          hostName: null 
+        }
+      });
+
+      Icinga.applyService = jest.fn();
+      Icinga.applyServiceGroup = jest.fn();
+      await instance.prepareObject(fixture);  
+      const calls = Icinga.applyService.mock.calls;
+      expect(Icinga.applyService.mock.instances.length).toBe(2);
+      expect(calls[0][0]).toBe('service-foobar-foo');
+      expect(calls[1][0]).toBe('service-foobar-foo');
     });
 
     it('create all service objects with custom service definition', async () => {

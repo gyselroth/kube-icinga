@@ -6,6 +6,7 @@ import Resource from './abstract.resource';
 
 interface IngressOptions {
   discover?: boolean;
+  hostName?: string;
   applyServices?: boolean;
   attachToNodes?: boolean;
   hostDefinition?: object;
@@ -24,6 +25,7 @@ export default class Ingress extends Resource {
   protected kubeNode: KubeNode;
   protected options = {
     applyServices: true,
+    hostName: "kubernetes-ingresses",
     attachToNodes: false,
     hostDefinition: {},
     serviceDefinition: {},
@@ -79,9 +81,10 @@ export default class Ingress extends Resource {
    * Preapre icinga object and apply
    */
   public async prepareObject(definition: any): Promise<any> {
-    let hostname = this.escapeName(['ingress', definition.metadata.namespace, definition.metadata.name].join('-'));
+    let hostname = this.getHostname(definition);
+
     if (!this.options.attachToNodes) {
-      await this.applyHost(hostname, definition.metadata.name, definition, this.options.hostTemplates);
+      await this.applyHost(hostname, hostname, definition, this.options.hostTemplates);
     }
 
     let service = this.prepareResource(definition);
@@ -124,13 +127,30 @@ export default class Ingress extends Resource {
   }
 
   /**
+   * Get hostname
+   */
+  protected getHostname(definition: any): string {
+    if(definition.metadata.annotations['kube-icinga/host']) {
+      return definition.metadata.annotations['kube-icinga/host'];
+    } else if(this.options.hostName === null) {
+      return this.escapeName(['ingress', definition.metadata.namespace, definition.metadata.name].join('-'));
+    }
+
+    return this.options.hostName;
+  }  
+
+  /**
    * Start kube listener
    */
   public async kubeListener(provider) {
+console.log("Start listener before try");
     try {
       let stream = provider();
+      console.log("Start listener");
+      console.log(stream);
       stream.pipe(this.jsonStream);
       this.jsonStream.on('data', async (object) => {
+      console.log("data");
         this.logger.debug('received kubernetes ingress resource', {object});
 
         if (object.object.kind !== 'Ingress') {
@@ -138,8 +158,10 @@ export default class Ingress extends Resource {
           return;
         }
 
+        let hostname = this.escapeName(['ingress', object.object.metadata.namespace, object.object.metadata.name].join('-'));
         if (object.type == 'MODIFIED' || object.type == 'DELETED') {
-          await this.icinga.deleteHost(object.object.metadata.name);
+          let hostname = this.getHostname(object.object);
+          await this.icinga.deleteHost(hostname);
         }
 
         if (object.type == 'ADDED' || object.type == 'MODIFIED') {
@@ -150,6 +172,15 @@ export default class Ingress extends Resource {
       });
 
       this.jsonStream.on('finish', () => {
+      console.log("finish", this.kubeListener, provider);
+        this.kubeListener(provider);
+      });
+      this.jsonStream.on('error', () => {
+      console.log("error", this.kubeListener, provider);
+        this.kubeListener(provider);
+      });
+      this.jsonStream.on('end', () => {
+      console.log("end", this.kubeListener, provider);
         this.kubeListener(provider);
       });
     } catch (err) {

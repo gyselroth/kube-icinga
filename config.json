@@ -1,6 +1,6 @@
 {
   "log": {
-    "level": "debug"
+    "level": "info"
   },
   "cleanup": true,
   "icinga": {
@@ -17,6 +17,7 @@
     },
     "ingresses": {
       "discover": true,
+      "hostName": "kubernetes-ingresses",
       "serviceDefinition": {},
       "hostDefinition": {},
       "serviceTemplates": ["generic-service"],
@@ -26,6 +27,7 @@
     },
     "volumes": {
       "discover": true,
+      "hostName": "kubernetes-volumes",
       "hostDefinition": {},
       "serviceTemplates": ["generic-service"],
       "hostTemplates": ["generic-host"],
@@ -35,6 +37,7 @@
     "services": {
       "ClusterIP": {
         "discover": false,
+        "hostName": "kubernetes-clusterip-services",
         "hostDefinition": {},
         "serviceTemplates": ["generic-service"],
         "hostTemplates": ["generic-host"],
@@ -42,6 +45,7 @@
       },
       "NodePort": {
         "discover": true,
+        "hostName": "kubernetes-nodeport-services",
         "serviceDefinition": {},
         "hostDefinition": {},
         "serviceTemplates": ["generic-service"],
@@ -51,6 +55,7 @@
       },
       "LoadBalancer": {
         "discover": true,
+        "hostName": "kubernetes-loadbalancer-services",
         "serviceDefinition": {},
         "hostDefinition": {},
         "serviceTemplates": ["generic-service"],

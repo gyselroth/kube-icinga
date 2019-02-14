@@ -8,6 +8,7 @@ interface VolumeOptions {
   discover?: boolean;
   applyServices?: boolean;
   attachToNodes?: boolean;
+  hostName?: string;
   hostDefinition?: object;
   serviceDefinition?: object;
   hostTemplates?: string[];
@@ -25,6 +26,7 @@ export default class Volume extends Resource {
   protected options = {
     applyServices: true,
     attachToNodes: false,
+    hostName: "kubernetes-volumes",
     hostDefinition: {},
     serviceDefinition: {},
     hostTemplates: [],
@@ -79,8 +81,11 @@ export default class Volume extends Resource {
    * Preapre icinga object and apply
    */
   public async prepareObject(definition: any): Promise<any> {
-    let hostname = this.escapeName(definition.metadata.annotations['pv.kubernetes.io/provisioned-by']);
-    await this.applyHost(hostname, hostname, definition, this.options.hostTemplates);
+    var hostname = this.getHostname(definition);
+
+    if (!this.options.attachToNodes) {
+      await this.applyHost(hostname, hostname, definition, this.options.hostTemplates);
+    }
 
     if (this.options.applyServices) {
       let groups = [];
@@ -93,7 +98,7 @@ export default class Volume extends Resource {
       templates = templates.concat(this.prepareTemplates(definition));
 
       let service = this.options.serviceDefinition;
-      let name = this.escapeName(['volume', definition.metadata.name].join('-'));
+      let name = this.escapeName(definition.metadata.name);
       let addition = {
         'check_command': 'dummy',
         'display_name': `${definition.metadata.name}:volume`,
@@ -107,6 +112,19 @@ export default class Volume extends Resource {
       this.applyService(hostname, name, addition, templates);
     }
   }
+
+  /**
+   * Get hostname
+   */
+  protected getHostname(definition: any): string {
+    if(definition.metadata.annotations['kube-icinga/host']) {
+      return definition.metadata.annotations['kube-icinga/host'];
+    } else if(this.options.hostName === null) {
+      return this.escapeName(['volume', definition.metadata.name].join('-'));
+    }
+
+    return this.options.hostName;
+  }    
 
   /**
    * Start kube listener
@@ -124,7 +142,8 @@ export default class Volume extends Resource {
         }
 
         if (object.type == 'MODIFIED' || object.type == 'DELETED') {
-          await this.icinga.deleteHost(object.object.metadata.name);
+          let hostname = this.getHostname(object.object);
+          await this.icinga.deleteHost(this.options.hostName);
         }
 
         if (object.type == 'ADDED' || object.type == 'MODIFIED') {

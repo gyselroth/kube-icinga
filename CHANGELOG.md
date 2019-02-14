@@ -1,4 +1,6 @@
-## 1.1.0
+## 2.0.0
+**Maintainer**: Raffael Sahli <sahli@gyselroth.com>\
+**Date**: Thur 14 Feb 2019 14:28:20 PM ET
 
 * [FIX] Fixes "(node:25116) UnhandledPromiseRejectionWarning: TypeError: result is not iterable" due error response from icinga
 * [FIX] Better error handling and catching various uncaught promises
@@ -15,6 +17,7 @@
 * [FIX] kube workes are in no namespace, remove icinga groups
 * [FIX] fixed Error: Invalid attribute specified: host_name\n for kube nodes
 * [FIX] fixed duplicate ingress objects (different path, same ingress names in different namespaces, ...)
+* [CHANGE] Added hostName setting, by default all resources (except nodes) get attached to single host object of their type (can be configured differently)
 
 
 ## 1.0.1
