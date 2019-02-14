@@ -1,7 +1,3 @@
-import {Logger} from 'winston';
-import Icinga from '../icinga';
-import JSONStream from 'json-stream';
-
 /**
  * kubernetes hosts
  */

@@ -146,7 +146,7 @@ export default class Service extends Resource {
         }
 
         let protocol = servicePort.protocol.toLowerCase();
-        let port_name = servicePort.name || protocol+':'+servicePort.port;
+        let portName = servicePort.name || protocol+':'+servicePort.port;
 
         if (!port.check_command) {
           port.check_command = protocol;
@@ -155,7 +155,7 @@ export default class Service extends Resource {
 
         port['vars._kubernetes'] = true;
         port['vars.kubernetes'] = definition;
-        let name = this.escapeName([definition.metadata.name, port_name].join('-'));
+        let name = this.escapeName([definition.metadata.name, portName].join('-'));
         port['display_name'] = name;
 
         this.applyService(hostname, name, serviceType, port, templates);

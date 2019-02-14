@@ -24,7 +24,7 @@ async function main() {
       logger.error('failed to cleanup icinga objects', {error: err});
     });
   }
-  /*
+
   if (config.kubernetes.nodes.discover) {
     kubeNode.kubeListener(() => {
       return kubeClient.apis.v1.watch.nodes.getStream();
@@ -36,7 +36,7 @@ async function main() {
       return kubeClient.apis.extensions.v1beta1.watch.ingresses.getStream();
     });
   }
-  */
+
   if (config.kubernetes.volumes.discover) {
     kubeVolume.kubeListener(() => {
       return kubeClient.apis.v1.watch.persistentvolumes.getStream();
