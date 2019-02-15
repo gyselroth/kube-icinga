@@ -34,13 +34,14 @@ Multiple watchers are bootstraped and listen for any kubernetes changes. Those c
   * [Ingresses](#ingresses)
   * [Services](#services)
   * [Volumes](#volumes)
-* [Requirement](#requirements)
+* [Requirements](#requirements)
 * [Setup icinga2 api user](#setup-icinga2-api-user)
 * [Deployment](#deployment)
+* [Resource visibility](#resource-visibility)
 * [Advanced topics](#advanced-topics)
-  * [ClusterIP services](#clusterip-services)
   * [Using icinga2 apply rules](#using-icinga2-apply-rules)
-  * [Overwite specific icinga object definition](#overwite-specific-icinga-object-definition)
+  * [Globally overwrite icinga object definitions](#globally-overwrite-icinga-object-definitions)
+  * [Overwrite icinga object definitions directly in kubernetes resources](overwrite-icinga-object-definitions-directly-in-kubernetes-resources)
 * [Configuration](#configuration)
 
 ## Resource types
