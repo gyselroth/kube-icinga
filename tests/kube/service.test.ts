@@ -2,10 +2,8 @@ import Service from '../../src/kube/service';
 import Node from '../../src/kube/node'; 
 import Icinga from '../../src/icinga';
 import Logger from '../../src/logger'; 
-import * as JSONStream from 'json-stream';
 jest.mock('../../src/icinga');
 jest.mock('../../src/kube/node');
-jest.mock('json-stream');
 jest.mock('../../src/logger');
 
 const template = {
@@ -52,7 +50,7 @@ beforeEach(() => {
 describe('kubernetes services', () => {
   describe('add service object with dummy host', () => {
     it('create icinga host object', () => {
-      let instance = new Service(Logger, Node, Icinga, JSONStream, {
+      let instance = new Service(Logger, Node, Icinga, {
         ClusterIP: {
           applyServices: false
         }
@@ -68,7 +66,7 @@ describe('kubernetes services', () => {
     });
     
     it('create dynamic icinga host object', () => {
-      let instance = new Service(Logger, Node, Icinga, JSONStream, {
+      let instance = new Service(Logger, Node, Icinga, {
         ClusterIP: {
           hostName: null,
           applyServices: false
@@ -85,7 +83,7 @@ describe('kubernetes services', () => {
     });
     
     it('create icinga host object with custom definitions', () => {
-      let instance = new Service(Logger, Node, Icinga, JSONStream, {
+      let instance = new Service(Logger, Node, Icinga, {
         ClusterIP: {
           applyServices: false,
           hostDefinition: {
@@ -104,7 +102,7 @@ describe('kubernetes services', () => {
     });
     
     it('create icinga host object with templates', () => {
-      let instance = new Service(Logger, Node, Icinga, JSONStream, {
+      let instance = new Service(Logger, Node, Icinga, {
         ClusterIP: {
           applyServices: false,
           hostTemplates: ['foo', 'bar']
@@ -119,7 +117,7 @@ describe('kubernetes services', () => {
     });
     
     it('do not create icinga host object while service is of type NodePort', () => {
-      let instance = new Service(Logger, Node, Icinga, JSONStream, {
+      let instance = new Service(Logger, Node, Icinga, {
         NodePort: {
           applyServices: false
         }
@@ -134,7 +132,7 @@ describe('kubernetes services', () => {
   
   describe('add service object namespace as service group', () => {
     it('create service group per default', async () => {
-      let instance = new Service(Logger, Node, Icinga, JSONStream);
+      let instance = new Service(Logger, Node, Icinga);
 
       Icinga.applyHost = jest.fn();
       Icinga.hasCheckCommand = jest.fn();
@@ -146,7 +144,7 @@ describe('kubernetes services', () => {
     });
     
     it('do not create servicegroup if applyServices is disabled', () => {
-      let instance = new Service(Logger, Node, Icinga, JSONStream, {
+      let instance = new Service(Logger, Node, Icinga, {
         applyServices: false
       });
 
@@ -159,7 +157,7 @@ describe('kubernetes services', () => {
 
   describe('add all service object ports as service objects', () => {
     it('create all service objects', async () => {
-      let instance = new Service(Logger, Node, Icinga, JSONStream);
+      let instance = new Service(Logger, Node, Icinga);
 
       Icinga.applyService = jest.fn();
       Icinga.applyServiceGroup = jest.fn();
@@ -178,7 +176,7 @@ describe('kubernetes services', () => {
     });
     
     it('create all service objects with dynamic hosts', async () => {
-      let instance = new Service(Logger, Node, Icinga, JSONStream, {
+      let instance = new Service(Logger, Node, Icinga, {
         ClusterIP: {
           hostName: null 
         }
@@ -194,7 +192,7 @@ describe('kubernetes services', () => {
     });
 
     it('create all service objects with custom service definition', async () => {
-      let instance = new Service(Logger, Node, Icinga, JSONStream, {
+      let instance = new Service(Logger, Node, Icinga, {
         ClusterIP: {
           applyServices: true,
           serviceDefinition: {
@@ -220,7 +218,7 @@ describe('kubernetes services', () => {
     });
 
     it('create all service objects with custom service definition, check_command not found, fallback to protocol', async () => {
-      let instance = new Service(Logger, Node, Icinga, JSONStream, {
+      let instance = new Service(Logger, Node, Icinga, {
         ClusterIP: {
           applyServices: true,
           serviceDefinition: {
@@ -246,7 +244,7 @@ describe('kubernetes services', () => {
     });
 
     it('create all service objects with templates', async () => {
-      let instance = new Service(Logger, Node, Icinga, JSONStream, {
+      let instance = new Service(Logger, Node, Icinga, {
         ClusterIP: {
           applyServices: true,
           serviceTemplates: ['foo', 'bar']
@@ -265,7 +263,7 @@ describe('kubernetes services', () => {
 
   describe('kubernetes annotations', () => {
     it('check_command/templates annotation', async () => {
-      let instance = new Service(Logger, Node, Icinga, JSONStream, {
+      let instance = new Service(Logger, Node, Icinga, {
         ClusterIP: {
           applyServices: true
         }  
@@ -289,7 +287,7 @@ describe('kubernetes services', () => {
     });
     
     it('use annotation instead global definition', async () => {
-      let instance = new Service(Logger, Node, Icinga, JSONStream, {
+      let instance = new Service(Logger, Node, Icinga, {
         ClusterIP: {
           applyServices: true,
           serviceDefinition: {
@@ -312,7 +310,7 @@ describe('kubernetes services', () => {
     });
 
     it('definiton merge', async () => {
-      let instance = new Service(Logger, Node, Icinga, JSONStream, {
+      let instance = new Service(Logger, Node, Icinga, {
         ClusterIP: {
           applyServices: true,
           serviceDefinition: {

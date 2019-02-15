@@ -1,6 +1,5 @@
 import {Logger} from 'winston';
 import Icinga from '../icinga';
-import JSONStream from 'json-stream';
 import Resource from './abstract.resource';
 
 interface NodeOptions {
@@ -15,7 +14,6 @@ interface NodeOptions {
 export default class Node extends Resource {
   protected logger: Logger;
   protected icinga: Icinga;
-  protected jsonStream: JSONStream;
   protected nodes: string[] = [];
   protected options: NodeOptions = {
     discover: true,
@@ -26,11 +24,10 @@ export default class Node extends Resource {
   /**
    * kubernetes hosts
    */
-  constructor(logger: Logger, icinga: Icinga, jsonStream: JSONStream, options: NodeOptions) {
+  constructor(logger: Logger, icinga: Icinga, options: NodeOptions) {
     super();
     this.logger = logger;
     this.icinga = icinga;
-    this.jsonStream = jsonStream;
     this.options = Object.assign(this.options, options);
   }
 
@@ -67,9 +64,8 @@ export default class Node extends Resource {
    */
   public async kubeListener(provider) {
     try {
-      const stream = provider();
-      stream.pipe(this.jsonStream);
-      this.jsonStream.on('data', async (object) => {
+      let stream = provider();
+      stream.on('data', async (object) => {
         // ignore MODIFIER for kube nodes
         if (object.type === 'MODIFIED') {
           return;
@@ -92,7 +88,7 @@ export default class Node extends Resource {
         }
       });
 
-      this.jsonStream.on('finish', () => {
+      stream.on('finish', () => {
         this.kubeListener(provider);
       });
     } catch (err) {

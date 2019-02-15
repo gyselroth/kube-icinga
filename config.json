@@ -41,7 +41,7 @@
         "hostDefinition": {},
         "serviceTemplates": ["generic-service"],
         "hostTemplates": ["generic-host"],
-        "applyServices": false
+        "applyServices": true
       },
       "NodePort": {
         "discover": true,
@@ -50,7 +50,7 @@
         "hostDefinition": {},
         "serviceTemplates": ["generic-service"],
         "hostTemplates": ["generic-host"],
-        "applyServices": false,
+        "applyServices": true,
         "attachToNodes": false
       },
       "LoadBalancer": {
@@ -60,7 +60,7 @@
         "hostDefinition": {},
         "serviceTemplates": ["generic-service"],
         "hostTemplates": ["generic-host"],
-        "applyServices": false
+        "applyServices": true
       }
     }
   }

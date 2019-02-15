@@ -10,36 +10,49 @@ import Volume from './kube/volume';
 import * as JSONStream from 'json-stream';
 
 const icinga = new IcingaWrapper(logger, icingaClient);
-const kubeNode = new Node(logger, icinga, new JSONStream(), config.kubernetes.nodes);
-const kubeIngress = new Ingress(logger, kubeNode, icinga, new JSONStream(), config.kubernetes.ingresses);
-const kubeService = new Service(logger, kubeNode, icinga, new JSONStream(), config.kubernetes.services);
-const kubeVolume = new Volume(logger, kubeNode, icinga, new JSONStream(), config.kubernetes.volumes);
+const kubeNode = new Node(logger, icinga, config.kubernetes.nodes);
+const kubeIngress = new Ingress(logger, kubeNode, icinga, config.kubernetes.ingresses);
+const kubeService = new Service(logger, kubeNode, icinga, config.kubernetes.services);
+const kubeVolume = new Volume(logger, kubeNode, icinga, config.kubernetes.volumes);
 
 /**
  * Main
  */
 async function main() {
   if (config.cleanup) {
-    await icinga.cleanup().catch((err) => {
-      logger.error('failed to cleanup icinga objects', {error: err});
+    await icinga.deleteServicesByFilter('service.vars._kubernetes == true').catch((err) => {
+      logger.error('failed to cleanup icinga services', {error: err});
+    });
+    
+    await icinga.deleteHostsByFilter('host.vars._kubernetes == true').catch((err) => {
+      logger.error('failed to cleanup icinga hosts', {error: err});
     });
   }
 
   if (config.kubernetes.nodes.discover) {
     kubeNode.kubeListener(function() {
-      return kubeClient.apis.v1.watch.nodes.getStream();
+      let json = new JSONStream();
+      let stream = kubeClient.apis.v1.watch.nodes.getStream();
+      stream.pipe(json);
+      return json;
     });
   }
 
   if (config.kubernetes.ingresses.discover) {
-    kubeIngress.kubeListener(function() {
-      return kubeClient.apis.extensions.v1beta1.watch.ingresses.getStream();
+    kubeIngress.kubeListener(() => {
+      let json = new JSONStream();
+      let stream = kubeClient.apis.extensions.v1beta1.watch.ingresses.getStream();
+      stream.pipe(json);
+      return json;
     });
   }
-
+  
   if (config.kubernetes.volumes.discover) {
     kubeVolume.kubeListener(function() {
-      return kubeClient.apis.v1.watch.persistentvolumes.getStream();
+      let json = new JSONStream();
+      let stream = kubeClient.apis.v1.watch.persistentvolumes.getStream();
+      stream.pipe(json);
+      return json;
     });
   }
 
@@ -47,7 +60,10 @@ async function main() {
   || config.kubernetes.services.NodePort.discover
   || config.kubernetes.services.LoadBalancer.discover) {
     kubeService.kubeListener(function() {
-      return kubeClient.apis.v1.watch.services.getStream();
+      let json = new JSONStream();
+      let stream = kubeClient.apis.v1.watch.services.getStream();
+      stream.pipe(json);
+      return json;
     });
   }
 }

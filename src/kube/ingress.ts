@@ -1,6 +1,5 @@
 import {Logger} from 'winston';
 import Icinga from '../icinga';
-import JSONStream from 'json-stream';
 import KubeNode from './node';
 import Resource from './abstract.resource';
 
@@ -21,11 +20,10 @@ interface IngressOptions {
 export default class Ingress extends Resource {
   protected logger: Logger;
   protected icinga: Icinga;
-  protected jsonStream: JSONStream;
   protected kubeNode: KubeNode;
   protected options = {
     applyServices: true,
-    hostName: "kubernetes-ingresses",
+    hostName: 'kubernetes-ingresses',
     attachToNodes: false,
     hostDefinition: {},
     serviceDefinition: {},
@@ -36,11 +34,10 @@ export default class Ingress extends Resource {
   /**
    * kubernetes hosts
    */
-  constructor(logger: Logger, kubeNode: KubeNode, icinga: Icinga, jsonStream: JSONStream, options: IngressOptions) {
+  constructor(logger: Logger, kubeNode: KubeNode, icinga: Icinga, options: IngressOptions) {
     super();
     this.logger = logger;
     this.icinga = icinga;
-    this.jsonStream = jsonStream;
     this.kubeNode = kubeNode;
     this.options = Object.assign(this.options, options);
   }
@@ -102,6 +99,7 @@ export default class Ingress extends Resource {
             'check_command': 'http',
             'display_name': `${spec.host}${base}:http`,
             'vars._kubernetes': true,
+            'vars._kubernetes_uid': definition.metadata.uid,
             'vars.kubernetes': definition,
             'vars.http_address': spec.host,
             'vars.http_vhost': spec.host,
@@ -130,27 +128,34 @@ export default class Ingress extends Resource {
    * Get hostname
    */
   protected getHostname(definition: any): string {
-    if(definition.metadata.annotations['kube-icinga/host']) {
+    if (definition.metadata.annotations['kube-icinga/host']) {
       return definition.metadata.annotations['kube-icinga/host'];
-    } else if(this.options.hostName === null) {
+    } else if (this.options.hostName === null) {
       return this.escapeName(['ingress', definition.metadata.namespace, definition.metadata.name].join('-'));
     }
 
     return this.options.hostName;
-  }  
+  }
+
+  /**
+   * Delete object
+   */  
+  protected deleteObject(definition: any): Promise<boolean> {
+    if (this.options.hostName === null) {
+      let hostname = this.getHostname(definition);
+      return this.icinga.deleteHost(hostname);
+    }
+
+    return this.icinga.deleteServicesByFilter('service.vars.kubernetes.metadata.uid=="'+definition.metadata.uid+'"'); 
+  }
 
   /**
    * Start kube listener
    */
   public async kubeListener(provider) {
-console.log("Start listener before try");
     try {
       let stream = provider();
-      console.log("Start listener");
-      console.log(stream);
-      stream.pipe(this.jsonStream);
-      this.jsonStream.on('data', async (object) => {
-      console.log("data");
+      stream.on('data', async (object) => {
         this.logger.debug('received kubernetes ingress resource', {object});
 
         if (object.object.kind !== 'Ingress') {
@@ -158,10 +163,10 @@ console.log("Start listener before try");
           return;
         }
 
-        let hostname = this.escapeName(['ingress', object.object.metadata.namespace, object.object.metadata.name].join('-'));
         if (object.type == 'MODIFIED' || object.type == 'DELETED') {
-          let hostname = this.getHostname(object.object);
-          await this.icinga.deleteHost(hostname);
+          await this.deleteObject(object.object).catch((err) => {
+            this.logger.error('failed to remove objects', {error: err})
+          });
         }
 
         if (object.type == 'ADDED' || object.type == 'MODIFIED') {
@@ -171,16 +176,7 @@ console.log("Start listener before try");
         }
       });
 
-      this.jsonStream.on('finish', () => {
-      console.log("finish", this.kubeListener, provider);
-        this.kubeListener(provider);
-      });
-      this.jsonStream.on('error', () => {
-      console.log("error", this.kubeListener, provider);
-        this.kubeListener(provider);
-      });
-      this.jsonStream.on('end', () => {
-      console.log("end", this.kubeListener, provider);
+      stream.on('finish', () => {
         this.kubeListener(provider);
       });
     } catch (err) {

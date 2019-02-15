@@ -1,6 +1,5 @@
 import {Logger} from 'winston';
 import Icinga from '../icinga';
-import JSONStream from 'json-stream';
 import KubeNode from './node';
 import Resource from './abstract.resource';
 
@@ -23,7 +22,7 @@ interface ServiceOptions {
 const defaults: ServiceOptions = {
   ClusterIP: {
     discover: false,
-    hostName: "kubernetes-clusterip-services",
+    hostName: 'kubernetes-clusterip-services',
     applyServices: true,
     hostDefinition: {},
     serviceDefinition: {},
@@ -32,7 +31,7 @@ const defaults: ServiceOptions = {
   },
   NodePort: {
     discover: true,
-    hostName: "kubernetes-nodeport-services",
+    hostName: 'kubernetes-nodeport-services',
     applyServices: true,
     hostDefinition: {},
     serviceDefinition: {},
@@ -41,7 +40,7 @@ const defaults: ServiceOptions = {
   },
   LoadBalancer: {
     discover: true,
-    hostName: "kubernetes-loadbalancer-services",
+    hostName: 'kubernetes-loadbalancer-services',
     applyServices: true,
     hostDefinition: {},
     serviceDefinition: {},
@@ -60,18 +59,16 @@ export default class Service extends Resource {
 
   protected logger: Logger;
   protected icinga: Icinga;
-  protected jsonStream: JSONStream;
   protected kubeNode: KubeNode;
   protected options: ServiceOptions = defaults;
 
   /**
    * kubernetes services
    */
-  constructor(logger: Logger, kubeNode: KubeNode, icinga: Icinga, jsonStream: JSONStream, options: ServiceOptions=defaults) {
+  constructor(logger: Logger, kubeNode: KubeNode, icinga: Icinga, options: ServiceOptions=defaults) {
     super();
     this.logger = logger;
     this.icinga = icinga;
-    this.jsonStream = jsonStream;
     let clone = JSON.parse(JSON.stringify(defaults));
     Object.assign(clone.ClusterIP, options.ClusterIP);
     Object.assign(clone.NodePort, options.NodePort);
@@ -175,13 +172,27 @@ export default class Service extends Resource {
   protected getHostname(definition: any): string {
     let serviceType = definition.spec.type;
 
-    if(definition.metadata.annotations['kube-icinga/host']) {
+    if (definition.metadata.annotations['kube-icinga/host']) {
       return definition.metadata.annotations['kube-icinga/host'];
-    } else if(this.options[serviceType].hostName === null) {
+    } else if (this.options[serviceType].hostName === null) {
       return this.escapeName(['service', definition.metadata.namespace, definition.metadata.name].join('-'));
     }
 
     return this.options[serviceType].hostName;
+  }
+
+  /**
+   * Delete object
+   */  
+  protected deleteObject(definition: any): Promise<boolean> {
+    let serviceType = definition.spec.type;
+
+    if (this.options[serviceType].hostName === null) {
+      let hostname = this.getHostname(definition);
+      return this.icinga.deleteHost(hostname);
+    }
+
+    return this.icinga.deleteServicesByFilter('service.vars.kubernetes.metadata.uid=="'+definition.metadata.uid+'"'); 
   }
 
   /**
@@ -190,8 +201,7 @@ export default class Service extends Resource {
   public async kubeListener(provider) {
     try {
       let stream = provider();
-      stream.pipe(this.jsonStream);
-      this.jsonStream.on('data', async (object) => {
+      stream.on('data', async (object) => {
         this.logger.debug('received kubernetes service resource', {object});
 
         if (object.object.kind !== 'Service') {
@@ -205,8 +215,9 @@ export default class Service extends Resource {
         }
 
         if (object.type == 'MODIFIED' || object.type == 'DELETED') {
-          let hostname = this.getHostname(object.object);
-          await this.icinga.deleteHost(hostname);
+          await this.deleteObject(object.object).catch((err) => {
+            this.logger.error('failed to remove objects', {error: err})
+          });
         }
 
         if (object.type == 'ADDED' || object.type == 'MODIFIED') {
@@ -216,7 +227,7 @@ export default class Service extends Resource {
         }
       });
 
-      this.jsonStream.on('finish', () => {
+      stream.on('finish', () => {
         this.kubeListener(provider);
       });
     } catch (err) {

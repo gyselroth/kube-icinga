@@ -2,9 +2,7 @@ import Volume from '../../src/kube/volume';
 import Node from '../../src/kube/node'; 
 import Icinga from '../../src/icinga';
 import {LoggerInstance} from 'winston'; 
-import * as JSONStream from 'json-stream';
 jest.mock('../../src/icinga');
-jest.mock('json-stream');
 jest.mock('kubernetes-client');
 
 const template = {
@@ -57,7 +55,7 @@ describe('kubernetes volumes', () => {
 
   describe('add volume object with dummy host', () => {
     it('create icinga host object', () => {
-      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Volume(LoggerInstance, Node, Icinga, {
         applyServices: false
       });
       Icinga.applyHost = jest.fn();
@@ -69,7 +67,7 @@ describe('kubernetes volumes', () => {
     });
     
     it('create icinga host object with dynamic host', () => {
-      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Volume(LoggerInstance, Node, Icinga, {
         applyServices: false,
         hostName: null
       });
@@ -82,7 +80,7 @@ describe('kubernetes volumes', () => {
     });
 
     it('create icinga host object with custom definitions', () => {
-      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Volume(LoggerInstance, Node, Icinga, {
         applyServices: false,
         hostDefinition: {
           'vars.foo': 'bar',
@@ -98,7 +96,7 @@ describe('kubernetes volumes', () => {
     });
 
     it('create icinga host object with templates', () => {
-      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Volume(LoggerInstance, Node, Icinga, {
         applyServices: false,
         hostTemplates: ['foo', 'bar']
       });
@@ -110,7 +108,7 @@ describe('kubernetes volumes', () => {
     });
 
     it('do not create icinga host object while attachToNodes is enabled', () => {
-      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Volume(LoggerInstance, Node, Icinga, {
         applyServices: false,
         attachToNodes: true
       });
@@ -123,7 +121,7 @@ describe('kubernetes volumes', () => {
   
   describe('add volume object namespace as service group', () => {
     it('create service group per default', async () => {
-      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream);
+      let instance = new Volume(LoggerInstance, Node, Icinga);
 
       Icinga.applyHost = jest.fn();
       Icinga.applyService = jest.fn();
@@ -134,7 +132,7 @@ describe('kubernetes volumes', () => {
     });
     
     it('do not create servicegroup if applyServices is disabled', () => {
-      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Volume(LoggerInstance, Node, Icinga, {
         applyServices: false
       });
 
@@ -147,7 +145,7 @@ describe('kubernetes volumes', () => {
 
   describe('add all volume object http path rules as service objects', () => {
     it('create service object', async () => {
-      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream);
+      let instance = new Volume(LoggerInstance, Node, Icinga);
 
       Icinga.applyServiceGroup = jest.fn();
       Icinga.applyService = jest.fn();
@@ -159,7 +157,7 @@ describe('kubernetes volumes', () => {
     });
     
     it('create service object with dynamic host', async () => {
-      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Volume(LoggerInstance, Node, Icinga, {
         hostName: null
       });
 
@@ -172,7 +170,7 @@ describe('kubernetes volumes', () => {
     }
 
     it('create all service objects with custom service definition', async () => {
-      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Volume(LoggerInstance, Node, Icinga, {
         applyServices: true,
         serviceDefinition: {
           'check_command': 'tcp',
@@ -189,7 +187,7 @@ describe('kubernetes volumes', () => {
     });
 
     it('create all service objects with templates', async () => {
-      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Volume(LoggerInstance, Node, Icinga, {
         applyServices: true,
         serviceTemplates: ['foo', 'bar']
       });
@@ -204,7 +202,7 @@ describe('kubernetes volumes', () => {
 
   describe('kubernetes annotations', () => {
     it('check_command/templates annotation', async () => {
-      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Volume(LoggerInstance, Node, Icinga, {
         applyServices: true
       });
 
@@ -221,7 +219,7 @@ describe('kubernetes volumes', () => {
     });
     
     it('use annotation instead global definition', async () => {
-      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Volume(LoggerInstance, Node, Icinga, {
         applyServices: true,
         serviceDefinition: {
           check_command: 'foo'
@@ -238,7 +236,7 @@ describe('kubernetes volumes', () => {
     });
 
     it('definiton merge', async () => {
-      let instance = new Volume(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Volume(LoggerInstance, Node, Icinga, {
         applyServices: true,
         serviceDefinition: {
           check_command: 'foo'

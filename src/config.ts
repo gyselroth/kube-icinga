@@ -26,6 +26,7 @@ const config = {
     },
     ingresses: {
       discover: process.env.KUBERNETES_INGRESSES_DISCOVER || defaultConfig.kubernetes.ingresses.discover || true,
+      hostName: process.env.KUBERNETES_INGRESSES_HOSTNAME || defaultConfig.kubernetes.ingresses.hostName || 'kubernetes-ingresses',
       applyServices: process.env.KUBERNETES_INGRESSES_APPLYSERVICES || defaultConfig.kubernetes.ingresses.applyServices || true,
       serviceDefinition: process.env.KUBERNETES_INGRESSES_SERVICE_DEFINITION || defaultConfig.kubernetes.ingresses.serviceDefinition || {},
       hostDefinition: process.env.KUBERNETES_INGRESSES_HOST_DEFINITION || defaultConfig.kubernetes.ingresses.hostDefinition || {},
@@ -34,17 +35,19 @@ const config = {
       attachToNodes: process.env.KUBERNETES_INGRESSES_ATTACHTONODES || defaultConfig.kubernetes.ingresses.attachToNodes || false,
     },
     volumes: {
-      discover: process.env.KUBERNETES_INGRESSES_DISCOVER || defaultConfig.kubernetes.volumes.discover || true,
-      applyServices: process.env.KUBERNETES_INGRESSES_APPLYSERVICES || defaultConfig.kubernetes.volumes.applyServices || true,
-      serviceDefinition: process.env.KUBERNETES_INGRESSES_SERVICE_DEFINITION || defaultConfig.kubernetes.volumes.serviceDefinition || {},
-      hostDefinition: process.env.KUBERNETES_INGRESSES_HOST_DEFINITION || defaultConfig.kubernetes.volumes.hostDefinition || {},
-      serviceTemplates: process.env.KUBERNETES_INGRESSES_SERVICE_TEMPLATES || defaultConfig.kubernetes.volumes.serviceTemplates || ['generic-service'],
-      hostTemplates: process.env.KUBERNETES_INGRESSES_HOST_TEMPLATES || defaultConfig.kubernetes.volumes.hostTemplates || ['generic-host'],
-      attachToNodes: process.env.KUBERNETES_INGRESSES_ATTACHTONODES || defaultConfig.kubernetes.volumes.attachToNodes || false,
+      discover: process.env.KUBERNETES_VOLUMES_DISCOVER || defaultConfig.kubernetes.volumes.discover || true,
+      hostName: process.env.KUBERNETES_VOLUMES_HOSTNAME || defaultConfig.kubernetes.volumes.hostName || 'kubernetes-volumes',
+      applyServices: process.env.KUBERNETES_VOLUMES_APPLYSERVICES || defaultConfig.kubernetes.volumes.applyServices || true,
+      serviceDefinition: process.env.KUBERNETES_VOLUMES_SERVICE_DEFINITION || defaultConfig.kubernetes.volumes.serviceDefinition || {},
+      hostDefinition: process.env.KUBERNETES_VOLUMES_HOST_DEFINITION || defaultConfig.kubernetes.volumes.hostDefinition || {},
+      serviceTemplates: process.env.KUBERNETES_VOLUMES_SERVICE_TEMPLATES || defaultConfig.kubernetes.volumes.serviceTemplates || ['generic-service'],
+      hostTemplates: process.env.KUBERNETES_VOLUMES_HOST_TEMPLATES || defaultConfig.kubernetes.volumes.hostTemplates || ['generic-host'],
+      attachToNodes: process.env.KUBERNETES_VOLUMES_ATTACHTONODES || defaultConfig.kubernetes.volumes.attachToNodes || false,
     },
     services: {
       ClusterIP: {
         discover: process.env.KUBERNETES_SERVICES_CLUSTERIP_DISCOVER || defaultConfig.kubernetes.services.ClusterIP.discover || false,
+        hostName: process.env.KUBERNETES_SERVICES_CLUSTERIP_HOSTNAME || defaultConfig.kubernetes.services.ClusterIP.hostName || 'kubernetes-clusterip-services',
         applyServices: process.env.KUBERNETES_SERVICES_CLUSTERIP_APPLYSERVICES || defaultConfig.kubernetes.services.ClusterIP.applyServices || true,
         serviceDefinition: process.env.KUBERNETES_SERVICES_CLUSTERIP_SERVICE_DEFINITION || defaultConfig.kubernetes.services.ClusterIP.serviceDefinition || {},
         hostDefinition: process.env.KUBERNETES_SERVICES_CLUSTERIP_HOST_DEFINITION || defaultConfig.kubernetes.services.ClusterIP.hostDefinition || {},
@@ -53,6 +56,7 @@ const config = {
       },
       NodePort: {
         discover: process.env.KUBERNETES_SERVICES_NODEPORT_DISCOVER || defaultConfig.kubernetes.services.NodePort.discover || true,
+        hostName: process.env.KUBERNETES_SERVICES_NODEPORT_HOSTNAME || defaultConfig.kubernetes.services.NodePort.hostName || 'kubernetes-nodeport-services',
         applyServices: process.env.KUBERNETES_SERVICES_NODEPORT_APPLYSERVICES || defaultConfig.kubernetes.services.NodePort.applyServices || true,
         serviceDefinition: process.env.KUBERNETES_SERVICES_NODEPORT_SERVICE_DEFINITION || defaultConfig.kubernetes.services.NodePort.serviceDefinition || {},
         hostDefinition: process.env.KUBERNETES_SERVICES_NODEPORT_HOST_DEFINITION || defaultConfig.kubernetes.services.NodePort.hostDefinition || {},
@@ -61,6 +65,7 @@ const config = {
       },
       LoadBalancer: {
         discover: process.env.KUBERNETES_SERVICES_LOADBALANCER_DISCOVER || defaultConfig.kubernetes.services.LoadBalancer.discover || true,
+        hostName: process.env.KUBERNETES_SERVICES_LOADBALANCER_HOSTNAME || defaultConfig.kubernetes.services.LoadBalancer.hostName || 'kubernetes-loadbalancer-services',
         applyServices: process.env.KUBERNETES_SERVICES_LOADBALANCER_APPLYSERVICES || defaultConfig.kubernetes.services.LoadBalancer.applyServices || true,
         serviceDefinition: process.env.KUBERNETES_SERVICES_LOADBALANCER_SERVICE_DEFINITION || defaultConfig.kubernetes.services.LoadBalancer.serviceDefinition || {},
         hostDefinition: process.env.KUBERNETES_SERVICES_LOADBALANCER_HOST_DEFINITION || defaultConfig.kubernetes.services.LoadBalancer.hostDefinition || {},

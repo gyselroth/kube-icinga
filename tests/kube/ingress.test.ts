@@ -2,9 +2,7 @@ import Ingress from '../../src/kube/ingress';
 import Node from '../../src/kube/node'; 
 import Icinga from '../../src/icinga';
 import {LoggerInstance} from 'winston'; 
-import * as JSONStream from 'json-stream';
 jest.mock('../../src/icinga');
-jest.mock('json-stream');
 jest.mock('kubernetes-client');
 
 const template = {
@@ -62,7 +60,7 @@ describe('kubernetes ingresses', () => {
 
   describe('add ingress object with dummy host', () => {
     it('create icinga host object', () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Ingress(LoggerInstance, Node, Icinga, {
         applyServices: false
       });
       Icinga.applyHost = jest.fn();
@@ -74,7 +72,7 @@ describe('kubernetes ingresses', () => {
     });
     
     it('create icinga host object with dynamic host', () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Ingress(LoggerInstance, Node, Icinga, {
         applyServices: false,
         hostName: null
       });
@@ -87,7 +85,7 @@ describe('kubernetes ingresses', () => {
     });
 
     it('create icinga host object with custom definitions', () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Ingress(LoggerInstance, Node, Icinga, {
         applyServices: false,
         hostDefinition: {
           'vars.foo': 'bar',
@@ -103,7 +101,7 @@ describe('kubernetes ingresses', () => {
     });
 
     it('create icinga host object with templates', () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Ingress(LoggerInstance, Node, Icinga, {
         applyServices: false,
         hostTemplates: ['foo', 'bar']
       });
@@ -115,7 +113,7 @@ describe('kubernetes ingresses', () => {
     });
 
     it('do not create icinga host object while attachToNodes is enabled', () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Ingress(LoggerInstance, Node, Icinga, {
         applyServices: false,
         attachToNodes: true
       });
@@ -128,7 +126,7 @@ describe('kubernetes ingresses', () => {
   
   describe('add ingress object namespace as service group', () => {
     it('create service group per default', async () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream);
+      let instance = new Ingress(LoggerInstance, Node, Icinga);
 
       Icinga.applyHost = jest.fn();
       Icinga.applyService = jest.fn();
@@ -139,7 +137,7 @@ describe('kubernetes ingresses', () => {
     });
     
     it('do not create servicegroup if applyServices is disabled', () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Ingress(LoggerInstance, Node, Icinga, {
         applyServices: false
       });
 
@@ -152,7 +150,7 @@ describe('kubernetes ingresses', () => {
 
   describe('add all ingress object http path rules as service objects', () => {
     it('create all service objects', async () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream);
+      let instance = new Ingress(LoggerInstance, Node, Icinga);
 
       Icinga.applyServiceGroup = jest.fn();
       Icinga.applyService = jest.fn();
@@ -168,7 +166,7 @@ describe('kubernetes ingresses', () => {
     });
     
     it('create all service objects with dynamic hosts', async () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Ingress(LoggerInstance, Node, Icinga, {
         hostName: null
       });
 
@@ -182,7 +180,7 @@ describe('kubernetes ingresses', () => {
     }
 
     it('create all service objects with custom service definition', async () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Ingress(LoggerInstance, Node, Icinga, {
         applyServices: true,
         serviceDefinition: {
           'check_command': 'tcp',
@@ -201,7 +199,7 @@ describe('kubernetes ingresses', () => {
     });
 
     it('create all service objects with templates', async () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Ingress(LoggerInstance, Node, Icinga, {
         applyServices: true,
         serviceTemplates: ['foo', 'bar']
       });
@@ -215,7 +213,7 @@ describe('kubernetes ingresses', () => {
     });
 
     it('create service objects for tls enabled ingresses', async () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Ingress(LoggerInstance, Node, Icinga, {
         applyServices: true,
         serviceTemplates: ['foo', 'bar']
       });
@@ -237,7 +235,7 @@ describe('kubernetes ingresses', () => {
 
   describe('kubernetes annotations', () => {
     it('check_command/templates annotation', async () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Ingress(LoggerInstance, Node, Icinga, {
         applyServices: true
       });
 
@@ -256,7 +254,7 @@ describe('kubernetes ingresses', () => {
     });
     
     it('use annotation instead global definition', async () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Ingress(LoggerInstance, Node, Icinga, {
         applyServices: true,
         serviceDefinition: {
           check_command: 'foo'
@@ -274,7 +272,7 @@ describe('kubernetes ingresses', () => {
     });
 
     it('definiton merge', async () => {
-      let instance = new Ingress(LoggerInstance, Node, Icinga, JSONStream, {
+      let instance = new Ingress(LoggerInstance, Node, Icinga, {
         applyServices: true,
         serviceDefinition: {
           check_command: 'foo'

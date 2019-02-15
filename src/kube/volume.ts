@@ -1,6 +1,5 @@
 import {Logger} from 'winston';
 import Icinga from '../icinga';
-import JSONStream from 'json-stream';
 import KubeNode from './node';
 import Resource from './abstract.resource';
 
@@ -21,12 +20,11 @@ interface VolumeOptions {
 export default class Volume extends Resource {
   protected logger: Logger;
   protected icinga: Icinga;
-  protected jsonStream: JSONStream;
   protected kubeNode: KubeNode;
   protected options = {
     applyServices: true,
     attachToNodes: false,
-    hostName: "kubernetes-volumes",
+    hostName: 'kubernetes-volumes',
     hostDefinition: {},
     serviceDefinition: {},
     hostTemplates: [],
@@ -36,11 +34,10 @@ export default class Volume extends Resource {
   /**
    * kubernetes hosts
    */
-  constructor(logger: Logger, kubeNode: KubeNode, icinga: Icinga, jsonStream: JSONStream, options: VolumeOptions) {
+  constructor(logger: Logger, kubeNode: KubeNode, icinga: Icinga, options: VolumeOptions) {
     super();
     this.logger = logger;
     this.icinga = icinga;
-    this.jsonStream = jsonStream;
     this.kubeNode = kubeNode;
     this.options = Object.assign(this.options, options);
   }
@@ -81,7 +78,7 @@ export default class Volume extends Resource {
    * Preapre icinga object and apply
    */
   public async prepareObject(definition: any): Promise<any> {
-    var hostname = this.getHostname(definition);
+    let hostname = this.getHostname(definition);
 
     if (!this.options.attachToNodes) {
       await this.applyHost(hostname, hostname, definition, this.options.hostTemplates);
@@ -117,14 +114,26 @@ export default class Volume extends Resource {
    * Get hostname
    */
   protected getHostname(definition: any): string {
-    if(definition.metadata.annotations['kube-icinga/host']) {
+    if (definition.metadata.annotations['kube-icinga/host']) {
       return definition.metadata.annotations['kube-icinga/host'];
-    } else if(this.options.hostName === null) {
+    } else if (this.options.hostName === null) {
       return this.escapeName(['volume', definition.metadata.name].join('-'));
     }
 
     return this.options.hostName;
-  }    
+  }
+
+  /**
+   * Delete object
+   */  
+  protected deleteObject(definition: any): Promise<boolean> {
+    if (this.options.hostName === null) {
+      let hostname = this.getHostname(definition);
+      return this.icinga.deleteHost(hostname);
+    }
+
+    return this.icinga.deleteServicesByFilter('service.vars.kubernetes.metadata.uid=="'+definition.metadata.uid+'"'); 
+  }  
 
   /**
    * Start kube listener
@@ -132,8 +141,7 @@ export default class Volume extends Resource {
   public async kubeListener(provider) {
     try {
       let stream = provider();
-      stream.pipe(this.jsonStream);
-      this.jsonStream.on('data', async (object) => {
+      stream.on('data', async (object) => {
         this.logger.debug('received kubernetes persistent volume resource', {object});
 
         if (object.object.kind !== 'PersistentVolume') {
@@ -142,8 +150,9 @@ export default class Volume extends Resource {
         }
 
         if (object.type == 'MODIFIED' || object.type == 'DELETED') {
-          let hostname = this.getHostname(object.object);
-          await this.icinga.deleteHost(this.options.hostName);
+          await this.deleteObject(object.object).catch((err) => {
+            this.logger.error('failed to remove objects', {error: err})
+          });
         }
 
         if (object.type == 'ADDED' || object.type == 'MODIFIED') {
@@ -153,7 +162,7 @@ export default class Volume extends Resource {
         }
       });
 
-      this.jsonStream.on('finish', () => {
+      stream.on('finish', () => {
         this.kubeListener(provider);
       });
     } catch (err) {

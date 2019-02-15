@@ -69,7 +69,7 @@ describe('kubernetes nodes', () => {
     });
      
     it('create icinga host object with custom definitions', () => {
-      let instance = new Node(Logger, Icinga, JSONStream, {
+      let instance = new Node(Logger, Icinga, {
         hostDefinition: {
           'vars.foo': 'bar',
           'vars.check_command': 'foo'
@@ -84,7 +84,7 @@ describe('kubernetes nodes', () => {
     });
 
     it('create icinga host object with templates', () => {
-      let instance = new Node(Logger, Icinga, JSONStream, {
+      let instance = new Node(Logger, Icinga, {
         hostTemplates: ['foo', 'bar']
       });
 
