@@ -1,13 +1,3 @@
-/*
-  public hasCheckCommand(command: string): Promise<boolean> {
-  public applyHostGroup(name: string): Promise<any> {
-  public applyServiceGroup(name: string): Promise<boolean> {
-  public applyHost(name: string, address: string, definition, templates: string[]=[]): Promise<boolean> {
-  public applyService(host: string, name: string, definition, templates: string[]=[]) {
-  public deleteService(host: string, name: string): Promise<boolean> {
-  public deleteHost(name: string): Promise<boolean> {
-  public async cleanup(): Promise<any> {
-*/
 import * as IcingaApi from 'icinga2-api';
 import IcingaClient from '../src/icinga';
 import Logger from '../src/logger';

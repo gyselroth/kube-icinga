@@ -208,49 +208,11 @@ export default class Icinga {
   }
 
   /**
-   * Cleanup all previously deployed icinga kubernetes objects
-   */
-  /*public async cleanup(): Promise<any> {
-    this.logger.info('start cleanup, removing all kubernetes objects from icinga');
-
-    return new Promise((resolve, reject) => {
-      this.icingaClient.getServiceFiltered({filter: 'service.vars._kubernetes == true'}, async (err, result) => {
-        if (err) {
-          return reject(err);
-        }
-
-        let handlers = [];
-        for (const service of result) {
-          handlers.push(this.deleteService(service.attrs.host_name, service.attrs.name));
-        }
-
-        await Promise.all(handlers);
-        resolve(true);
-      });
-
-      this.icingaClient.getHostFiltered({filter: 'host.vars._kubernetes == true'}, async (err, result) => {
-        if (err) {
-          return reject(err);
-        }
-
-        let handlers = [];
-        for (const host of result) {
-          handlers.push(this.deleteHost(host.attrs.name));
-        }
-
-        await Promise.all(handlers);
-        resolve(true);
-      });
-    });
-  }*/
-
-  /**
    * Delete services by filter
    */
   public async deleteServicesByFilter(filter: string): Promise<any> {
     return new Promise((resolve, reject) => {
       this.icingaClient.getServiceFiltered({filter: filter}, async (err, result) => {
-console.log(err, result);
         if (err) {
           return reject(err);
         }

@@ -12,7 +12,8 @@ const template = {
     "metadata": {
         "name": "foo",
         "namespace": "foobar",
-        "annotations": {}
+        "annotations": {},
+        "uid": "xyz"
     },
     "spec": {
         "clusterIP": "10.99.24.32",
@@ -48,6 +49,140 @@ beforeEach(() => {
 });
 
 describe('kubernetes services', () => {
+  describe('service watch stream', () => {
+    it('do not create icinga service object if typ is disabled for provisioning', async () => {
+      let instance = new Service(Logger, Node, Icinga, {
+        ClusterIP: {
+          discover: false
+        }
+      });
+
+      var resource = {  
+        type: 'ADDED', 
+        object: fixture
+      };
+      
+      Icinga.deleteServicesByFilter = jest.fn();
+      Icinga.applyHost = jest.fn();
+      
+      var bindings = {};
+      var json = {
+        on: function(name, callback) {
+          bindings[name] = callback;
+        }
+      };
+    
+      await instance.kubeListener(() => {
+        return json;
+      });
+
+      await bindings.data(resource);
+      expect(Icinga.applyHost.mock.calls.length).toBe(0);  
+      expect(Icinga.deleteServicesByFilter.mock.calls.length).toBe(0);
+    });
+    
+    it('create icinga service object', async () => {
+      let instance = new Service(Logger, Node, Icinga, {
+        ClusterIP: {
+          discover: true
+        }
+      });
+      var resource = {  
+        type: 'ADDED', 
+        object: fixture
+      };
+      
+      Icinga.deleteServicesByFilter = jest.fn();
+      Icinga.applyHost = jest.fn();
+      
+      var bindings = {};
+      var json = {
+        on: function(name, callback) {
+          bindings[name] = callback;
+        }
+      };
+    
+      await instance.kubeListener(() => {
+        return json;
+      });
+
+      await bindings.data(resource);
+      expect(Icinga.applyHost.mock.calls.length).toBe(1);  
+      expect(Icinga.deleteServicesByFilter.mock.calls.length).toBe(0);
+    });
+    
+    it('modify service object delete and create', async () => {
+      let instance = new Service(Logger, Node, Icinga, {
+        ClusterIP: {
+          discover: true
+        }
+      });
+
+      var resource = {  
+        type: 'MODIFIED', 
+        object: fixture
+      };
+      
+      Icinga.applyHost = jest.fn();
+      Icinga.deleteServicesByFilter = function(definition) {
+        expect(definition).toEqual('service.vars.kubernetes.metadata.uid==\"xyz\"');
+        return new Promise((resolve,reject) => {
+          resolve(true);
+        });
+      };
+
+      var bindings = {};
+      var json = {
+        on: async function(name, callback) {
+          bindings[name] = callback;
+        }
+      };
+    
+      await instance.kubeListener(() => {
+        return json;
+      });
+
+      await bindings.data(resource);
+      expect(Icinga.applyHost.mock.calls.length).toBe(1);  
+    });
+    
+    it('delete service object delete', async () => {
+      let instance = new Service(Logger, Node, Icinga, {
+        ClusterIP: {
+          discover: true
+        }
+      });
+
+      var resource = {  
+        type: 'DELETED', 
+        object: fixture
+      };
+
+      Icinga.applyHost = jest.fn();
+      Icinga.deleteServicesByFilter = function(definition) {
+        expect(definition).toEqual('service.vars.kubernetes.metadata.uid==\"xyz\"');
+        return new Promise((resolve,reject) => {
+          resolve(true);
+        });
+      };
+
+
+      var bindings = {};
+      var json = {
+        on: function(name, callback) {
+          bindings[name] = callback.bind(instance);
+        }
+      };
+    
+      await instance.kubeListener(() => {
+        return json;
+      });
+
+      await bindings.data(resource);
+      expect(Icinga.applyHost.mock.calls.length).toBe(0);  
+    });
+  });
+
   describe('add service object with dummy host', () => {
     it('create icinga host object', () => {
       let instance = new Service(Logger, Node, Icinga, {

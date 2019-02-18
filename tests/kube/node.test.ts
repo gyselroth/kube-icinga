@@ -26,22 +26,82 @@ beforeEach(() => {
 
 describe('kubernetes nodes', () => {
   describe('nodes watch stream', () => {
-    it('create icinga host object', () => {
-      let instance = new Node(Logger, Icinga, new JSONStream());
-      instance.prepareObject = jest.fn();
-      /*Icinga.applyHost = jest.fn();
-      instance.prepareObject(fixture);  
-      const call = Icinga.applyHost.mock.calls[0];*/
-      var stream = new Readable();
-      stream._read = () => {};
-      stream.push(JSON.stringify([{
+    it('create icinga host object', async () => {
+      let instance = new Node(Logger, Icinga);
+      var resource = {  
+        type: 'ADDED', 
+        object: fixture
+      };
+      
+      instance.prepareObject = function(definition) {
+        expect(definition).toEqual(resource.object);
+        return new Promise((resolve,reject) => {
+          resolve(true);
+        });
+      };
+
+      var bindings = {};
+      var json = {
+        on: function(name, callback) {
+          bindings[name] = callback;
+        }
+      };
+    
+      await instance.kubeListener(() => {
+        return json;
+      });
+
+      bindings.data(resource);
+    });
+    
+    it('modify host object no action', async () => {
+      let instance = new Node(Logger, Icinga);
+      var resource = {  
         type: 'MODIFIED', 
         object: fixture
-      }]));
+      };
+      
+      instance.prepareObject = jest.fn();
 
-      instance.kubeListener(() => {
-        return stream;
+      var bindings = {};
+      var json = {
+        on: function(name, callback) {
+          bindings[name] = callback;
+        }
+      };
+    
+      await instance.kubeListener(() => {
+        return json;
       });
+
+      bindings.data(resource);
+      expect(instance.prepareObject.mock.calls.length).toBe(0);  
+    });
+    
+    it('delete host object delete', async () => {
+      let instance = new Node(Logger, Icinga);
+      var resource = {  
+        type: 'DELETED', 
+        object: fixture
+      };
+
+      Icinga.deleteHost = jest.fn();
+      instance.prepareObject = jest.fn();
+
+      var bindings = {};
+      var json = {
+        on: function(name, callback) {
+          bindings[name] = callback;
+        }
+      };
+    
+      await instance.kubeListener(() => {
+        return json;
+      });
+
+      bindings.data(resource);
+      expect(Icinga.deleteHost.mock.calls.length).toEqual(1)
+      expect(instance.prepareObject.mock.calls.length).toEqual(0);  
     });
   });
 
