@@ -23,7 +23,7 @@ async function main() {
     await icinga.deleteServicesByFilter('service.vars._kubernetes == true').catch((err) => {
       logger.error('failed to cleanup icinga services', {error: err});
     });
-    
+
     await icinga.deleteHostsByFilter('host.vars._kubernetes == true').catch((err) => {
       logger.error('failed to cleanup icinga hosts', {error: err});
     });
@@ -46,7 +46,7 @@ async function main() {
       return json;
     });
   }
-  
+
   if (config.kubernetes.volumes.discover) {
     kubeVolume.kubeListener(function() {
       let json = new JSONStream();

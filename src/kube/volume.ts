@@ -86,6 +86,7 @@ export default class Volume extends Resource {
 
     if (this.options.applyServices) {
       let groups = [];
+      
       if (definition.spec.claimRef.namespace) {
         groups.push(definition.spec.claimRef.namespace);
         await this.icinga.applyServiceGroup(definition.spec.claimRef.namespace);
@@ -125,15 +126,15 @@ export default class Volume extends Resource {
 
   /**
    * Delete object
-   */  
+   */
   protected deleteObject(definition: any): Promise<boolean> {
     if (this.options.hostName === null) {
       let hostname = this.getHostname(definition);
       return this.icinga.deleteHost(hostname);
     }
 
-    return this.icinga.deleteServicesByFilter('service.vars.kubernetes.metadata.uid=="'+definition.metadata.uid+'"'); 
-  }  
+    return this.icinga.deleteServicesByFilter('service.vars.kubernetes.metadata.uid=="'+definition.metadata.uid+'"');
+  }
 
   /**
    * Start kube listener
@@ -151,7 +152,7 @@ export default class Volume extends Resource {
 
         if (object.type == 'MODIFIED' || object.type == 'DELETED') {
           await this.deleteObject(object.object).catch((err) => {
-            this.logger.error('failed to remove objects', {error: err})
+            this.logger.error('failed to remove objects', {error: err});
           });
         }
 

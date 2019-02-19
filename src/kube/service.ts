@@ -183,7 +183,7 @@ export default class Service extends Resource {
 
   /**
    * Delete object
-   */  
+   */
   protected deleteObject(definition: any): Promise<boolean> {
     let serviceType = definition.spec.type;
 
@@ -192,7 +192,7 @@ export default class Service extends Resource {
       return this.icinga.deleteHost(hostname);
     }
 
-    return this.icinga.deleteServicesByFilter('service.vars.kubernetes.metadata.uid=="'+definition.metadata.uid+'"'); 
+    return this.icinga.deleteServicesByFilter('service.vars.kubernetes.metadata.uid=="'+definition.metadata.uid+'"');
   }
 
   /**
@@ -216,7 +216,7 @@ export default class Service extends Resource {
 
         if (object.type == 'MODIFIED' || object.type == 'DELETED') {
           await this.deleteObject(object.object).catch((err) => {
-            this.logger.error('failed to remove objects', {error: err})
+            this.logger.error('failed to remove objects', {error: err});
           });
         }
 

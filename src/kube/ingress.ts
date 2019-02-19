@@ -86,7 +86,7 @@ export default class Ingress extends Resource {
     let service = this.prepareResource(definition);
     let templates = this.options.serviceTemplates;
     templates = templates.concat(this.prepareTemplates(definition));
-    
+
     if (this.options.applyServices) {
       await this.icinga.applyServiceGroup(definition.metadata.namespace);
 
@@ -138,14 +138,14 @@ export default class Ingress extends Resource {
 
   /**
    * Delete object
-   */  
+   */
   protected deleteObject(definition: any): Promise<boolean> {
     if (this.options.hostName === null) {
       let hostname = this.getHostname(definition);
       return this.icinga.deleteHost(hostname);
     }
-    
-    return this.icinga.deleteServicesByFilter('service.vars.kubernetes.metadata.uid=="'+definition.metadata.uid+'"'); 
+
+    return this.icinga.deleteServicesByFilter('service.vars.kubernetes.metadata.uid=="'+definition.metadata.uid+'"');
   }
 
   /**
@@ -164,9 +164,9 @@ export default class Ingress extends Resource {
 
         if (object.type == 'MODIFIED' || object.type == 'DELETED') {
           await this.deleteObject(object.object).catch((err) => {
-            this.logger.error('failed to remove objects', {error: err})
+            this.logger.error('failed to remove objects', {error: err});
           });
-          }
+        }
 
         if (object.type == 'ADDED' || object.type == 'MODIFIED') {
           this.prepareObject(object.object).catch((err) => {
