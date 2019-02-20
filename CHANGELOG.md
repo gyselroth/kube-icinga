@@ -18,6 +18,8 @@
 * [FIX] fixed Error: Invalid attribute specified: host_name\n for kube nodes
 * [FIX] fixed duplicate ingress objects (different path, same ingress names in different namespaces, ...)
 * [CHANGE] Added hostName setting, by default all resources (except nodes) get attached to single host object of their type (can be configured differently)
+* [CHANGE] Implemented workaround for icinga issue https://github.com/Icinga/icinga2/issues/6012, restart icinga service after adding new objects
+* [FIX] Changing boolean values in config.json now reflects as configured (Set to false was not possible in v1.x)
 
 
 ## 1.0.1

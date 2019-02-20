@@ -2,7 +2,7 @@ import {createLogger, format, transports} from 'winston';
 import config from './config';
 
 const logger = createLogger({
-  level: config.log.level,
+  level: config.log.level || 'info',
   format: format.combine(
     format.timestamp({
       format: 'YYYY-MM-DD HH:mm:ss',

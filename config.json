@@ -28,6 +28,7 @@
     "volumes": {
       "discover": true,
       "hostName": "kubernetes-volumes",
+      "serviceDefinition": {},
       "hostDefinition": {},
       "serviceTemplates": ["generic-service"],
       "hostTemplates": ["generic-host"],
@@ -38,6 +39,7 @@
       "ClusterIP": {
         "discover": false,
         "hostName": "kubernetes-clusterip-services",
+        "serviceDefinition": {},
         "hostDefinition": {},
         "serviceTemplates": ["generic-service"],
         "hostTemplates": ["generic-host"],

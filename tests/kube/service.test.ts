@@ -305,8 +305,10 @@ describe('kubernetes services', () => {
       expect(calls[1][1]).toBe('foobar-foo-bar');
 
       expect(calls[0][2]['check_command']).toBe('tcp');
+      expect(calls[0][2]['vars.tcp_address']).toBe('10.99.24.32');
       expect(calls[0][2]['vars.tcp_port']).toBe(80);
       expect(calls[1][2]['check_command']).toBe('tcp');
+      expect(calls[1][2]['vars.tcp_address']).toBe('10.99.24.32');
       expect(calls[1][2]['vars.tcp_port']).toBe(10000);
     });
     
@@ -347,8 +349,12 @@ describe('kubernetes services', () => {
       const calls = Icinga.applyService.mock.calls;
       expect(Icinga.applyService.mock.instances.length).toBe(2);
       expect(calls[0][2].check_command).toBe('http');
+      expect(calls[0][2]['vars.http_address']).toBe('10.99.24.32');
+      expect(calls[0][2]['vars.http_port']).toBe(80);
       expect(calls[0][2]['vars.foo']).toBe('bar');
       expect(calls[1][2].check_command).toBe('http');
+      expect(calls[1][2]['vars.http_address']).toBe('10.99.24.32');
+      expect(calls[1][2]['vars.http_port']).toBe(10000);
       expect(calls[1][2]['vars.foo']).toBe('bar');
     });
 
@@ -394,6 +400,46 @@ describe('kubernetes services', () => {
       expect(calls[0][3]).toEqual(['foo', 'bar']);
       expect(calls[1][3]).toEqual(['foo', 'bar']);
     });
+    
+    it('create NodePort service objects', async () => {
+      let instance = new Service(Logger, Node, Icinga);
+
+      Node.getWorkerNodes = function() {
+        return ['foo', 'bar'];
+      };
+
+      Icinga.applyService = jest.fn();
+      Icinga.applyServiceGroup = jest.fn();
+      fixture.spec.type = 'NodePort'
+      Icinga.applyHost = jest.fn();
+
+      await instance.prepareObject(fixture);  
+      const calls = Icinga.applyService.mock.calls;
+      expect(Icinga.applyHost.mock.instances.length).toBe(0);
+      expect(Icinga.applyService.mock.instances.length).toBe(4);
+
+      expect(calls[0][0]).toBe('foo');
+      expect(calls[1][0]).toBe('bar');
+      expect(calls[0][1]).toBe('foobar-foo-http');
+      expect(calls[1][1]).toBe('foobar-foo-http');
+      expect(calls[0][2]['check_command']).toBe('tcp');
+      expect(calls[0][2]['vars.tcp_address']).toBe(undefined);
+      expect(calls[0][2]['vars.tcp_port']).toBe(80);
+      expect(calls[1][2]['check_command']).toBe('tcp');
+      expect(calls[1][2]['vars.tcp_address']).toBe(undefined);
+      expect(calls[1][2]['vars.tcp_port']).toBe(80);
+
+      expect(calls[2][0]).toBe('foo');
+      expect(calls[3][0]).toBe('bar');
+      expect(calls[2][1]).toBe('foobar-foo-bar');
+      expect(calls[3][1]).toBe('foobar-foo-bar');
+      expect(calls[2][2]['check_command']).toBe('tcp');
+      expect(calls[2][2]['vars.tcp_address']).toBe(undefined);
+      expect(calls[2][2]['vars.tcp_port']).toBe(10000);
+      expect(calls[3][2]['check_command']).toBe('tcp');
+      expect(calls[3][2]['vars.tcp_address']).toBe(undefined);
+      expect(calls[3][2]['vars.tcp_port']).toBe(10000);
+    }); 
   });
 
   describe('kubernetes annotations', () => {
@@ -417,6 +463,10 @@ describe('kubernetes services', () => {
       expect(Icinga.applyService.mock.instances.length).toBe(2);
       expect(calls[0][2].check_command).toBe('bar');
       expect(calls[1][2].check_command).toBe('bar');
+      expect(calls[0][2]['vars.bar_address']).toBe('10.99.24.32');
+      expect(calls[0][2]['vars.bar_port']).toBe(80);
+      expect(calls[1][2]['vars.bar_address']).toBe('10.99.24.32');
+      expect(calls[1][2]['vars.bar_port']).toBe(10000);
       expect(calls[0][3]).toEqual(['foobar', 'barfoo']);
       expect(calls[1][3]).toEqual(['foobar', 'barfoo']);
     });

@@ -28,7 +28,7 @@ async function main() {
       logger.error('failed to cleanup icinga hosts', {error: err});
     });
   }
-
+  
   if (config.kubernetes.nodes.discover) {
     kubeNode.kubeListener(function() {
       let json = new JSONStream();
@@ -48,7 +48,7 @@ async function main() {
   }
 
   if (config.kubernetes.volumes.discover) {
-    kubeVolume.kubeListener(function() {
+    kubeVolume.kubeListener(() => {
       let json = new JSONStream();
       let stream = kubeClient.apis.v1.watch.persistentvolumes.getStream();
       stream.pipe(json);
@@ -59,7 +59,7 @@ async function main() {
   if (config.kubernetes.services.ClusterIP.discover
   || config.kubernetes.services.NodePort.discover
   || config.kubernetes.services.LoadBalancer.discover) {
-    kubeService.kubeListener(function() {
+    kubeService.kubeListener(() => {
       let json = new JSONStream();
       let stream = kubeClient.apis.v1.watch.services.getStream();
       stream.pipe(json);

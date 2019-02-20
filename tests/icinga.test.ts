@@ -6,7 +6,7 @@ jest.mock('../src/logger');
 var icinga;
 
 beforeEach(() => {
-    icinga = new IcingaClient(Logger, IcingaApi);
+  icinga = new IcingaClient(Logger, IcingaApi);
 });
 
 describe('icinga', () => {
@@ -238,8 +238,41 @@ describe('icinga', () => {
       expect(calls.length).toBe(1);
       expect(calls[0][1]).toBe('foobar');
     });
-  });
 
+    it('add new host restarts icinga service', async () => {
+      IcingaApi.restartProcess = jest.fn()
+        .mockImplementation((cb) => cb(null, {foo: "bar"}));
+
+      jest.useFakeTimers();
+      icinga = new IcingaClient(Logger, IcingaApi);
+
+      IcingaApi.createHostCustom = jest.fn()
+        .mockImplementation((data, name, cb) => cb(null, {foo: "bar"}));
+
+      IcingaApi.getHostState = jest.fn()
+        .mockImplementation((Host, cb) => cb({Statuscode: 404}, null));
+
+      await expect(icinga.applyHost('foobar', {foo: "bar"}, ["foobar"])).resolves.toEqual(true);
+
+      var calls = IcingaApi.getHostState.mock.calls;
+      expect(calls.length).toBe(1);
+      expect(calls[0][0]).toBe('foobar');
+      
+      calls = IcingaApi.createHostCustom.mock.calls;
+      expect(calls.length).toBe(1);
+      expect(calls[0][0]).toBe(JSON.stringify({
+        attrs: {
+          foo: "bar"
+        },
+        templates: ["foobar"]
+      }));
+
+      expect(calls[0][1]).toBe('foobar');
+      jest.runOnlyPendingTimers();
+      expect(IcingaApi.restartProcess.mock.calls.length).toBe(1);
+    });
+  });
+  
   describe('apply service', () => {
     it('icinga service does exists', async () => {
       IcingaApi.createServiceCustom = jest.fn();

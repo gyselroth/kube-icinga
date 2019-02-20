@@ -7,6 +7,7 @@ import IcingaClient from 'icinga2-api';
 export default class Icinga {
   protected logger: Logger;
   protected icingaClient: IcingaClient;
+  protected triggerRestart: boolean=false;
 
   /**
    * icinga wrapper
@@ -14,6 +15,28 @@ export default class Icinga {
   constructor(logger: Logger, icingaClient: IcingaClient) {
     this.logger = logger;
     this.icingaClient = icingaClient;
+    this.checkRestart();
+  }
+
+  /**
+   * Check if restarted needed
+   */
+  protected checkRestart(): void {
+    setInterval(() => {
+      this.logger.debug(`check if icinga service restart is required (https://github.com/Icinga/icinga2/issues/6012)`);
+      if(this.triggerRestart === true) {
+        this.logger.debug(`icinga service restart required`);
+        this.triggerRestart = false;
+
+        this.icingaClient.restartProcess((err, result) => {
+          if(err) {
+            this.logger.error(`trigger icinga service restart`, {error: err});
+          } else {
+            this.logger.info(`icinga service restart triggered`);
+          }
+        });
+      }
+    }, 30000);
   }
 
   /**
@@ -53,6 +76,7 @@ export default class Icinga {
                 resolve(false);
               } else {
                 this.logger.info(`host group ${name} was created successfully`, {result: result});
+                this.triggerRestart = true;
                 resolve(true);
               }
             });
@@ -84,6 +108,7 @@ export default class Icinga {
                 resolve(false);
               } else {
                 this.logger.info(`service group ${name} was created successfully`, {result: result});
+                this.triggerRestart = true;
                 resolve(true);
               }
             });
@@ -120,6 +145,7 @@ export default class Icinga {
                 resolve(false);
               } else {
                 this.logger.info(`host ${name} was created successfully`, {result: result});
+                this.triggerRestart = true;
                 resolve(true);
               }
             });
@@ -156,6 +182,7 @@ export default class Icinga {
                 resolve(false);
               } else {
                 this.logger.info(`service ${name} on host ${host} was created successfully`, {result: result});
+                this.triggerRestart = true;
                 resolve(true);
               }
             });

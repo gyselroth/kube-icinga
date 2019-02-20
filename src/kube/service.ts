@@ -141,6 +141,11 @@ export default class Service extends Resource {
           let hasCommand = await this.icinga.hasCheckCommand(port.check_command);
           if (hasCommand) {
             this.logger.debug('service can be checked via check command '+port.check_command);
+            
+            if (serviceType !== Service.TYPE_NODEPORT) {
+              port['vars.'+port.check_command+'_address'] = definition.spec.clusterIP;
+            }  
+  
             port['vars.'+port.check_command+'_port'] = servicePort.nodePort || servicePort.port;
           } else {
             delete port.check_command;
@@ -153,6 +158,11 @@ export default class Service extends Resource {
 
         if (!port.check_command) {
           port.check_command = protocol;
+
+          if (serviceType !== Service.TYPE_NODEPORT) {
+            port['vars.'+protocol+'_address'] = definition.spec.clusterIP;
+          }
+            
           port['vars.'+protocol+'_port'] = servicePort.nodePort || servicePort.port;
         }
 
