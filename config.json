@@ -4,10 +4,10 @@
   },
   "cleanup": true,
   "icinga": {
-    "address": "",
+    "address": "127.0.0.1",
     "port": 5665,
-    "apiUser": "",
-    "apiPassword": ""
+    "apiUser": "kube-icinga",
+    "apiPassword": "kube-icinga"
   },
   "kubernetes": {
     "nodes": {
@@ -17,7 +17,18 @@
     },
     "ingresses": {
       "discover": true,
-      "serviceDefiniton": {},
+      "hostName": "kubernetes-ingresses",
+      "serviceDefinition": {},
+      "hostDefinition": {},
+      "serviceTemplates": ["generic-service"],
+      "hostTemplates": ["generic-host"],
+      "applyServices": true,
+      "attachToNodes": false
+    },
+    "volumes": {
+      "discover": true,
+      "hostName": "kubernetes-volumes",
+      "serviceDefinition": {},
       "hostDefinition": {},
       "serviceTemplates": ["generic-service"],
       "hostTemplates": ["generic-host"],
@@ -27,30 +38,31 @@
     "services": {
       "ClusterIP": {
         "discover": false,
+        "hostName": "kubernetes-clusterip-services",
+        "serviceDefinition": {},
         "hostDefinition": {},
         "serviceTemplates": ["generic-service"],
         "hostTemplates": ["generic-host"],
-        "applyServices": false,
-        "portNameAsCommand": true
+        "applyServices": true
       },
       "NodePort": {
         "discover": true,
-        "serviceDefiniton": {},
+        "hostName": "kubernetes-nodeport-services",
+        "serviceDefinition": {},
         "hostDefinition": {},
         "serviceTemplates": ["generic-service"],
         "hostTemplates": ["generic-host"],
-        "applyServices": false,
-        "portNameAsCommand": true,
+        "applyServices": true,
         "attachToNodes": false
       },
       "LoadBalancer": {
         "discover": true,
-        "serviceDefiniton": {},
+        "hostName": "kubernetes-loadbalancer-services",
+        "serviceDefinition": {},
         "hostDefinition": {},
         "serviceTemplates": ["generic-service"],
         "hostTemplates": ["generic-host"],
-        "applyServices": false,
-        "portNameAsCommand": true
+        "applyServices": true
       }
     }
   }
