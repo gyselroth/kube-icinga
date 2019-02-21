@@ -114,6 +114,41 @@ describe('kubernetes ingresses', () => {
       await bindings.data(resource);
       expect(Icinga.applyHost.mock.calls.length).toBe(1);  
     });
+
+    it('modify ingress object delete and create host', async () => {
+      let instance = new Ingress(Logger, Node, Icinga, {
+        hostName: null
+      });
+        
+      var resource = {  
+        type: 'MODIFIED', 
+        object: fixture
+      };
+      
+      Icinga.applyHost = jest.fn();
+      Icinga.deleteServicesByFilter = jest.fn();
+      Icinga.deleteHost = function(name) {
+        expect(name).toEqual('ingress-foobar-foo');
+        return new Promise((resolve,reject) => {
+          resolve(true);
+        });
+      };
+
+      var bindings = {};
+      var json = {
+        on: async function(name, callback) {
+          bindings[name] = callback;
+        }
+      };
+    
+      await instance.kubeListener(() => {
+        return json;
+      });
+
+      await bindings.data(resource);
+      expect(Icinga.applyHost.mock.calls.length).toBe(1);  
+      expect(Icinga.deleteServicesByFilter.mock.calls.length).toBe(0);  
+    });
     
     it('delete ingress object delete', async () => {
       let instance = new Ingress(Logger, Node, Icinga);
@@ -321,6 +356,33 @@ describe('kubernetes ingresses', () => {
       expect(calls[1][2]['vars.http_ssl']).toBe(true);
     });
 
+    it('attach services to kube workers if attachToNodes is enabled', async () => {
+      let instance = new Ingress(Logger, Node, Icinga, {
+        attachToNodes: true
+      });
+
+      Node.getWorkerNodes = function() {
+        return ['foo', 'bar'];
+      };
+
+      Icinga.applyService = jest.fn();
+      Icinga.applyServiceGroup = jest.fn();
+      Icinga.applyHost = jest.fn();
+
+      await instance.prepareObject(fixture);  
+      const calls = Icinga.applyService.mock.calls;
+      expect(Icinga.applyHost.mock.instances.length).toBe(0);
+      expect(Icinga.applyService.mock.instances.length).toBe(4);
+
+      expect(calls[0][0]).toBe('foo');
+      expect(calls[1][0]).toBe('bar');
+      expect(calls[2][0]).toBe('foo');
+      expect(calls[3][0]).toBe('bar');
+      expect(calls[0][1]).toBe('foobar.example.org-http--');
+      expect(calls[1][1]).toBe('foobar.example.org-http--');
+      expect(calls[2][1]).toBe('barfoo.example.org-http--foo');
+      expect(calls[3][1]).toBe('barfoo.example.org-http--foo');
+    });     
   });
 
   describe('kubernetes annotations', () => {

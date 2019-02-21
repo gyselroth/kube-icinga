@@ -109,7 +109,42 @@ describe('kubernetes volumes', () => {
       await bindings.data(resource);
       expect(Icinga.applyHost.mock.calls.length).toBe(1);  
     });
+
+    it('modify ingress object delete and create host', async () => {
+      let instance = new Volume(Logger, Node, Icinga, {
+        hostName: null
+      });
+        
+      var resource = {  
+        type: 'MODIFIED', 
+        object: fixture
+      };
+      
+      Icinga.applyHost = jest.fn();
+      Icinga.deleteServicesByFilter = jest.fn();
+      Icinga.deleteHost = function(name) {
+        expect(name).toEqual('volume-generic-nimble-fad5684e-22fb-11e9-94e3-0050568fe3c2');
+        return new Promise((resolve,reject) => {
+          resolve(true);
+        });
+      };
+
+      var bindings = {};
+      var json = {
+        on: async function(name, callback) {
+          bindings[name] = callback;
+        }
+      };
     
+      await instance.kubeListener(() => {
+        return json;
+      });
+
+      await bindings.data(resource);
+      expect(Icinga.applyHost.mock.calls.length).toBe(1);  
+      expect(Icinga.deleteServicesByFilter.mock.calls.length).toBe(0);  
+    });
+
     it('delete volume object delete', async () => {
       let instance = new Volume(Logger, Node, Icinga);
 
@@ -233,7 +268,7 @@ describe('kubernetes volumes', () => {
     });
   });
 
-  describe('add all volume object http path rules as service objects', () => {
+  describe('add all volume objects as service objects', () => {
     it('create service object', async () => {
       let instance = new Volume(Logger, Node, Icinga);
 
@@ -288,6 +323,30 @@ describe('kubernetes volumes', () => {
       expect(Icinga.applyService.mock.instances.length).toBe(1);
       expect(calls[0][3]).toEqual(['foo', 'bar']);
     });
+
+    it('attach services to kube workers if attachToNodes is enabled', async () => {
+      let instance = new Volume(Logger, Node, Icinga, {
+        attachToNodes: true
+      });
+
+      Node.getWorkerNodes = function() {
+        return ['foo', 'bar'];
+      };
+
+      Icinga.applyService = jest.fn();
+      Icinga.applyServiceGroup = jest.fn();
+      Icinga.applyHost = jest.fn();
+
+      await instance.prepareObject(fixture);  
+      const calls = Icinga.applyService.mock.calls;
+      expect(Icinga.applyHost.mock.instances.length).toBe(0);
+      expect(Icinga.applyService.mock.instances.length).toBe(2);
+
+      expect(calls[0][0]).toBe('foo');
+      expect(calls[1][0]).toBe('bar');
+      expect(calls[0][1]).toBe('generic-nimble-fad5684e-22fb-11e9-94e3-0050568fe3c2');
+      expect(calls[1][1]).toBe('generic-nimble-fad5684e-22fb-11e9-94e3-0050568fe3c2');
+    });     
   });
 
   describe('kubernetes annotations', () => {

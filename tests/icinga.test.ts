@@ -391,4 +391,51 @@ describe('icinga', () => {
       expect(calls[0][0]).toBe('bar');
     });
   });
+
+
+  describe('delete services by filter', () => {
+    it('delete service filtered', async () => {
+      icinga.deleteService = jest.fn();
+      IcingaApi.getServiceFiltered = jest.fn()
+        .mockImplementation((host, cb) => cb(null, [
+          {attrs: {name: "foo", host_name: "foo"}},
+          {attrs: {name: "bar", host_name: "bar"}},
+      ]));
+
+      await expect(icinga.deleteServicesByFilter('vars.bar==true')).resolves.toEqual(true); 
+      expect(icinga.deleteService.mock.calls.length).toBe(2);
+    });
+
+    it('get services filtered failed', async () => {
+      IcingaApi.deleteService = jest.fn();
+      IcingaApi.getServiceFiltered = jest.fn()
+        .mockImplementation((host, cb) => cb({Statuscode: 500}, null));
+
+      await expect(icinga.deleteServicesByFilter('vars.bar==true')).rejects.toEqual({Statuscode: 500}); 
+      expect(IcingaApi.deleteService.mock.calls.length).toBe(0);
+    });
+  });
+
+  describe('delete hosts by filter', () => {
+    it('delete host filtered', async () => {
+      icinga.deleteHost = jest.fn();
+      IcingaApi.getHostFiltered = jest.fn()
+        .mockImplementation((host, cb) => cb(null, [
+          {attrs: {name: "foo"}},
+          {attrs: {name: "bar"}},
+      ]));
+
+      await expect(icinga.deleteHostsByFilter('vars.bar==true')).resolves.toEqual(true); 
+      expect(icinga.deleteHost.mock.calls.length).toBe(2);
+    });
+
+    it('get hosts filtered failed', async () => {
+      IcingaApi.deleteHost = jest.fn();
+      IcingaApi.getHostFiltered = jest.fn()
+        .mockImplementation((host, cb) => cb({Statuscode: 500}, null));
+
+      await expect(icinga.deleteHostsByFilter('vars.bar==true')).rejects.toEqual({Statuscode: 500}); 
+      expect(IcingaApi.deleteHost.mock.calls.length).toBe(0);
+    });
+  });
 });
