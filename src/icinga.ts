@@ -23,16 +23,16 @@ export default class Icinga {
    */
   protected checkRestart(): void {
     setInterval(() => {
-      this.logger.debug(`check if icinga service restart is required (https://github.com/Icinga/icinga2/issues/6012)`);
-      if(this.triggerRestart === true) {
-        this.logger.debug(`icinga service restart required`);
+      this.logger.debug('check if icinga service restart is required (https://github.com/Icinga/icinga2/issues/6012)');
+      if (this.triggerRestart === true) {
+        this.logger.debug('icinga service restart required');
         this.triggerRestart = false;
 
         this.icingaClient.restartProcess((err, result) => {
-          if(err) {
-            this.logger.error(`trigger icinga service restart`, {error: err});
+          if (err) {
+            this.logger.error('trigger icinga service restart', {error: err});
           } else {
-            this.logger.info(`icinga service restart triggered`);
+            this.logger.info('icinga service restart triggered');
           }
         });
       }
