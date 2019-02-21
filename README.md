@@ -22,7 +22,7 @@ Multiple watchers are bootstraped and listen for any kubernetes changes. Those c
 * Kubernetes namespaces will result in icinga service groups
 * Nodes will result in host objects 
 * Ingresses will result in icinga services (and or host objects)
-* Services (ClusterIP, NodePort [2], LoadBalanacer) will result in icinga services (and/or host objects)
+* Services (ClusterIP, NodePort, LoadBalanacer) will result in icinga services (and/or host objects)
 * Persistent volumes will result in icinga services (and/or host objects)
 
 ## Table of Contents

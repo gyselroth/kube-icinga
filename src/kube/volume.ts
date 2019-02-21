@@ -86,7 +86,7 @@ export default class Volume extends Resource {
 
     if (this.options.applyServices) {
       let groups = [];
-      
+
       if (definition.spec.claimRef.namespace) {
         groups.push(definition.spec.claimRef.namespace);
         await this.icinga.applyServiceGroup(definition.spec.claimRef.namespace);

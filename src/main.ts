@@ -28,7 +28,7 @@ async function main() {
       logger.error('failed to cleanup icinga hosts', {error: err});
     });
   }
-  
+
   if (config.kubernetes.nodes.discover) {
     kubeNode.kubeListener(function() {
       let json = new JSONStream();
