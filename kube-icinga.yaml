@@ -92,7 +92,7 @@ spec:
         env:
         - name: ICINGA_ADDRESS
           value: icinga_address
-        - name: ICINGA_API_USER
+        - name: ICINGA_API_USERNAME
           valueFrom:
             secretKeyRef:
               name: icinga-credentials
