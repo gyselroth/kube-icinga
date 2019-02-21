@@ -36,6 +36,7 @@ rules:
   - ingresses
   - services
   - nodes
+  - persistentvolumes
   verbs:
   - get
   - watch
