@@ -197,42 +197,42 @@ List of configurable values:
 |`icinga.apiPassword`|Icinga2 API password|`ICINGA_API_PASSWORD`|`admin`|
 |`cleanup`|If `true` all kubernetes objects get removed from icinga at startup|`CLEANUP`|`true`|
 |`kubernetes.nodes.discover`|Deploy kubernetes node objects|`KUBERNETES_NODES_DISCOVER`|`true`|
-|`kubernetes.nodes.hostDefinition`|You may overwrite specific attributes of the icinga [host definiton](https://www.icinga.com/docs/icinga2/latest/doc/09-object-types/#host).|`ICINGA_NODES_HOST_DEFINITION`|`{}`|
-|`kubernetes.nodes.hostTemplates`|Specify a list of host templates|`ICINGA_NODES_HOST_TEMPLATES`|`['generic-host']`|
+|`kubernetes.nodes.hostDefinition`|You may overwrite specific attributes of the icinga [host definiton](https://www.icinga.com/docs/icinga2/latest/doc/09-object-types/#host).|`KUBERNETES_NODES_HOST_DEFINITION`|`{}`|
+|`kubernetes.nodes.hostTemplates`|Specify a list of host templates (comma separated string if defined via env variable)|`KUBERNETES_NODES_HOST_TEMPLATES`|`['generic-host']`|
 |`kubernetes.ingresses.discover`|Deploy kubernetes ingress objects|`KUBERNETES_INGRESSES_DISCOVER`|`true`|
 |`kubernetes.ingresses.hostName`|The name of the icinga host object to attach services to (May also be null to enabled host object provisioning)|`KUBERNETES_INGRESSES_HOSTNAME`|`kubernetes-ingresses`|
-|`kubernetes.ingresses.serviceDefinition`|You may overwrite specific attributes of the icinga [service definiton](https://www.icinga.com/docs/icinga2/latest/doc/09-object-types/#service). |`ICINGA_INGRESSES_SERVICE_DEFINITION`|'{}'|
-|`kubernetes.ingresses.hostDefinition`|You may overwrite specific attributes of the icinga [host definiton](https://www.icinga.com/docs/icinga2/latest/doc/09-object-types/#host).|`ICINGA_INGRESSES_SERVICE_DEFINITION`|`{}`|
-|`kubernetes.ingresses.serviceTemplates`|Specify a list of icinga service templates|`ICINGA_INGRESSES_SERVICE_TEMPLATES`|`['generic-service']`|
-|`kubernetes.ingresses.hostTemplates`|Specify a list of host templates|`ICINGA_INGRESSES_HOST_TEMPLATES`|`['generic-host']`|
+|`kubernetes.ingresses.serviceDefinition`|You may overwrite specific attributes of the icinga [service definiton](https://www.icinga.com/docs/icinga2/latest/doc/09-object-types/#service). |`KUBERNETES_INGRESSES_SERVICE_DEFINITION`|'{}'|
+|`kubernetes.ingresses.hostDefinition`|You may overwrite specific attributes of the icinga [host definiton](https://www.icinga.com/docs/icinga2/latest/doc/09-object-types/#host).|`KUBERNETES_INGRESSES_SERVICE_DEFINITION`|`{}`|
+|`kubernetes.ingresses.serviceTemplates`|Specify a list of icinga service templates (comma separated string if defined via env variable)|`KUBERNETES_INGRESSES_SERVICE_TEMPLATES`|`['generic-service']`|
+|`kubernetes.ingresses.hostTemplates`|Specify a list of host templates (comma separated string if defined via env variable)|`KUBERNETES_INGRESSES_HOST_TEMPLATES`|`['generic-host']`|
 |`kubernetes.ingresses.applyServices`|Apply ingress paths as icinga services attached to the icinga ingress host|`KUBERNETES_INGRESSES_APPLYSERVICES`|`true`|
 |`kubernetes.ingresses.attachToNodes`|If `true` instead attaching port services to a dummy host object `metadata.name` all services get attached to each kubernetes worker node!|`KUBERNETES_INGRESSES_ATTACHTONODES`|`false`|
 |`kubernetes.volumes.discover`|Deploy kubernetes ingress objects|`KUBERNETES_VOLUMES_DISCOVER`|`true`|
 |`kubernetes.volumes.hostName`|The name of the icinga host object to attach services to (May also be null to enabled host object provisioning)|`KUBERNETES_VOLUMES_HOSTNAME`|`kubernetes-volumes`|
-|`kubernetes.volumes.serviceDefinition`|You may overwrite specific attributes of the icinga [service definiton](https://www.icinga.com/docs/icinga2/latest/doc/09-object-types/#service). |`ICINGA_VOLUMES_SERVICE_DEFINITION`|'{}'|
-|`kubernetes.volumes.hostDefinition`|You may overwrite specific attributes of the icinga [host definiton](https://www.icinga.com/docs/icinga2/latest/doc/09-object-types/#host).|`ICINGA_VOLUMES_SERVICE_DEFINITION`|`{}`|
-|`kubernetes.volumes.serviceTemplates`|Specify a list of icinga service templates|`ICINGA_VOLUMES_SERVICE_TEMPLATES`|`['generic-service']`|
-|`kubernetes.volumes.hostTemplates`|Specify a list of host templates|`ICINGA_VOLUMES_HOST_TEMPLATES`|`['generic-host']`|
+|`kubernetes.volumes.serviceDefinition`|You may overwrite specific attributes of the icinga [service definiton](https://www.icinga.com/docs/icinga2/latest/doc/09-object-types/#service). |`KUBERNETES_VOLUMES_SERVICE_DEFINITION`|'{}'|
+|`kubernetes.volumes.hostDefinition`|You may overwrite specific attributes of the icinga [host definiton](https://www.icinga.com/docs/icinga2/latest/doc/09-object-types/#host).|`KUBERNETES_VOLUMES_SERVICE_DEFINITION`|`{}`|
+|`kubernetes.volumes.serviceTemplates`|Specify a list of icinga service templates (comma separated string if defined via env variable)|`KUBERNETES_VOLUMES_SERVICE_TEMPLATES`|`['generic-service']`|
+|`kubernetes.volumes.hostTemplates`|Specify a list of host templates (comma separated string if defined via env variable)|`KUBERNETES_VOLUMES_HOST_TEMPLATES`|`['generic-host']`|
 |`kubernetes.volumes.applyServices`|Apply volumes as icinga services attached to a icinga host object|`KUBERNETES_VOLUMES_APPLYSERVICES`|`true`|
 |`kubernetes.volumes.attachToNodes`|If `true` instead attaching port services to a dummy host object `metadata.name` all services get attached to each kubernetes worker node!|`KUBERNETES_VOLUMES_ATTACHTONODES`|`false`|
 |`kubernetes.services.ClusterIP.discover`|Deploy kubernetes service objects|`KUBERNETES_SERVICES_CLUSTERIP_DISCOVER`|`false`|
 |`kubernetes.services.ClusterIP.hostName`|The name of the icinga host object to attach services to (May also be null to enabled host object provisioning)|`KUBERNETES_SERVICES_CLUSTERIP_HOSTNAME`|`kubernetes-clusterip-services`|
-|`kubernetes.services.ClusterIP.serviceDefinition`|You may overwrite specific attributes of the icinga [service definiton](https://www.icinga.com/docs/icinga2/latest/doc/09-object-types/#service). |`ICINGA_SERVICES_CLUSTERIP_SERVICE_DEFINITION`|`{}`|
-|`kubernetes.services.ClusterIP.hostDefinition`|You may overwrite specific attributes of the icinga [host definiton](https://www.icinga.com/docs/icinga2/latest/doc/09-object-types/#host).|`ICINGA_SERVICES_CLUSTERIP_HOST_DEFINITION`|`{}`|
-|`kubernetes.services.ClusterIP.serviceTemplates`|Specify a list of icinga service templates|`ICINGA_SERVICES_CLUSTERIP_SERVICE_TEMPLATES`|`['generic-service']`|
-|`kubernetes.services.ClusterIP.hostTemplates`|Specify a list of host templates|`ICINGA_SERVICES_CLUSTERIP_HOST_TEMPLATES`|`['generic-host']`|
+|`kubernetes.services.ClusterIP.serviceDefinition`|You may overwrite specific attributes of the icinga [service definiton](https://www.icinga.com/docs/icinga2/latest/doc/09-object-types/#service). |`KUBERNETES_SERVICES_CLUSTERIP_SERVICE_DEFINITION`|`{}`|
+|`kubernetes.services.ClusterIP.hostDefinition`|You may overwrite specific attributes of the icinga [host definiton](https://www.icinga.com/docs/icinga2/latest/doc/09-object-types/#host).|`KUBERNETES_SERVICES_CLUSTERIP_HOST_DEFINITION`|`{}`|
+|`kubernetes.services.ClusterIP.serviceTemplates`|Specify a list of icinga service templates (comma separated string if defined via env variable)|`KUBERNETES_SERVICES_CLUSTERIP_SERVICE_TEMPLATES`|`['generic-service']`|
+|`kubernetes.services.ClusterIP.hostTemplates`|Specify a list of host templates (comma separated string if defined via env variable)|`KUBERNETES_SERVICES_CLUSTERIP_HOST_TEMPLATES`|`['generic-host']`|
 |`kubernetes.services.ClusterIP.applyServices`|URI of LDAP server|`KUBERNETES_SERVICES_CLUSTERIP_APPLYSERVICES`|`true`|
 |`kubernetes.services.NodePort.discover`|Deploy kubernetes service objects|`KUBERNETES_SERVICES_NODEPORT_DISCOVER`|`true`|
-|`kubernetes.services.NodePort.serviceDefinition`|You may overwrite specific attributes of the icinga [service definiton](https://www.icinga.com/docs/icinga2/latest/doc/09-object-types/#service). |`ICINGA_SERVICES_SERVICE_DEFINITION`|`{}`|
-|`kubernetes.services.NodePort.hostDefinition`|You may overwrite specific attributes of the icinga [host definiton](https://www.icinga.com/docs/icinga2/latest/doc/09-object-types/#host).|`ICINGA_SERVICES_NODEPORT_HOST_DEFINITION`|`{}`|
-|`kubernetes.services.NodePort.serviceTemplates`|Specify a list of icinga service templates|`ICINGA_SERVICES_NODEPORT_SERVICE_TEMPLATES`|`['generic-service']`|
-|`kubernetes.services.NodePort.hostTemplates`|Specify a list of host templates|`ICINGA_SERVICES_NODEPORT_HOST_TEMPLATES`|`['generic-host']`|
+|`kubernetes.services.NodePort.serviceDefinition`|You may overwrite specific attributes of the icinga [service definiton](https://www.icinga.com/docs/icinga2/latest/doc/09-object-types/#service). |`KUBERNETES_SERVICES_SERVICE_DEFINITION`|`{}`|
+|`kubernetes.services.NodePort.hostDefinition`|You may overwrite specific attributes of the icinga [host definiton](https://www.icinga.com/docs/icinga2/latest/doc/09-object-types/#host).|`KUBERNETES_SERVICES_NODEPORT_HOST_DEFINITION`|`{}`|
+|`kubernetes.services.NodePort.serviceTemplates`|Specify a list of icinga service templates (comma separated string if defined via env variable)|`KUBERNETES_SERVICES_NODEPORT_SERVICE_TEMPLATES`|`['generic-service']`|
+|`kubernetes.services.NodePort.hostTemplates`|Specify a list of host templates (comma separated string if defined via env variable)|`KUBERNETES_SERVICES_NODEPORT_HOST_TEMPLATES`|`['generic-host']`|
 |`kubernetes.services.NodePort.applyServices`|URI of LDAP server|`KUBERNETES_SERVICES_NODEPORT_APPLYSERVICES`|`true`|
 |`kubernetes.services.NodePort.hostName`|The name of the icinga host object to attach services to (May also be null to enabled host object provisioning)|`KUBERNETES_SERVICES_NODEPORT_HOSTNAME`|`kubernetes-nodeport-services`|
 |`kubernetes.services.LoadBalancer.discover`|Deploy kubernetes service objects|`KUBERNETES_SERVICES_LOADBALANCER_DISCOVER`|`true`|
 |`kubernetes.services.LoadBalancer.hostName`|The name of the icinga host object to attach services to (May also be null to enabled host object provisioning)|`KUBERNETES_SERVICES_LOADBALANCER_HOSTNAME`|`kubernetes-loadbalancer-services`|
-|`kubernetes.services.LoadBalancer.serviceDefinition`|You may overwrite specific attributes of the icinga [service definiton](https://www.icinga.com/docs/icinga2/latest/doc/09-object-types/#service). |`ICINGA_SERVICES_LOADBALANCER_SERVICE_DEFINITION`|`{}`|
-|`kubernetes.services.LoadBalancer.hostDefinition`|You may overwrite specific attributes of the icinga [host definiton](https://www.icinga.com/docs/icinga2/latest/doc/09-object-types/#host).|`ICINGA_SERVICES_LOADBALANCER_HOST_DEFINITION`|`{}`|
-|`kubernetes.services.LoadBalancer.serviceTemplates`|Specify a list of icinga service templates|`ICINGA_SERVICES_LOADBALANCER_SERVICE_TEMPLATES`|`['generic-service']`|
-|`kubernetes.services.LoadBalancer.hostTemplates`|Specify a list of host templates|`ICINGA_SERVICES_LOADBALANCER_HOST_TEMPLATES`|`['generic-host']`|
+|`kubernetes.services.LoadBalancer.serviceDefinition`|You may overwrite specific attributes of the icinga [service definiton](https://www.icinga.com/docs/icinga2/latest/doc/09-object-types/#service). |`KUBERNETES_SERVICES_LOADBALANCER_SERVICE_DEFINITION`|`{}`|
+|`kubernetes.services.LoadBalancer.hostDefinition`|You may overwrite specific attributes of the icinga [host definiton](https://www.icinga.com/docs/icinga2/latest/doc/09-object-types/#host).|`KUBERNETES_SERVICES_LOADBALANCER_HOST_DEFINITION`|`{}`|
+|`kubernetes.services.LoadBalancer.serviceTemplates`|Specify a list of icinga service templates (comma separated string if defined via env variable)|`KUBERNETES_SERVICES_LOADBALANCER_SERVICE_TEMPLATES`|`['generic-service']`|
+|`kubernetes.services.LoadBalancer.hostTemplates`|Specify a list of host templates (comma separated string if defined via env variable)|`KUBERNETES_SERVICES_LOADBALANCER_HOST_TEMPLATES`|`['generic-host']`|
 |`kubernetes.services.LoadBalancer.applyServices`|URI of LDAP server|`KUBERNETES_SERVICES_LOADBALANCER_APPLYSERVICES`|`true`|

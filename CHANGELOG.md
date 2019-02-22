@@ -1,6 +1,13 @@
+## 2.0.1
+**Maintainer**: Raffael Sahli <sahli@gyselroth.com>\
+**Date**: Thu 21 Feb 2019 17:14:20 PM ET
+
+* [FIX] none string environment variables not parsed correctly into config #10
+
+
 ## 2.0.0
 **Maintainer**: Raffael Sahli <sahli@gyselroth.com>\
-**Date**: Thur 14 Feb 2019 14:28:20 PM ET
+**Date**: Thu 21 Feb 2019 14:28:20 PM ET
 
 * [FIX] Fixes "(node:25116) UnhandledPromiseRejectionWarning: TypeError: result is not iterable" due error response from icinga
 * [FIX] Better error handling and catching various uncaught promises
