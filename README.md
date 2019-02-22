@@ -110,7 +110,7 @@ The kubernetes deployment can simply be added like this:
 ```sh
 kubectl -f https://raw.githubusercontent.com/gyselroth/kube-icinga/master/kube-icinga.yaml
 ```
-(Change the secret password and KUBERNETES_ADDRESS value accordingly)
+(Change the secret password and ICINGA_ADDRESS value accordingly)
 
 >**Note**: kube-icinga will be created as single pod deployment in the kubernetes kube-system namespace. You may changes this behaviour.
 
