@@ -85,12 +85,15 @@ Since a persistent volume is not directly attached to namespace the namespace fo
 >**Note** Volume services are created by default with the dummy check_command. Since there is no way for kube-icinga to specify the correct command automatically. You need to either overwrite the check_command in annotations, set the command
 in the serviceDefinition for volumes or disable service provisioning, enable host provisioning (set hostName to `null`) and create icinga apply rule based services manually.
 
+
 You may wonder where your pods are in this setup. Well it does not make any sense to monitor single pods. Pods are mortal and (always) moving. The important thing is to monitor your services as an entity.
 
 
 ## Requirements
 * A running kubernetes cluster
 * Icinga2 server with enabled API module
+
+**Note**: Icinga2 does not have to be running on kubernetes! You may just use your icinga2 server outside your kubernetes cluster.
 
 ## Setup icinga2 api user
 kube-icina requires an [icinga api user](https://icinga.com/docs/icinga2/latest/doc/12-icinga2-api/#authentication) which first must be created. 
