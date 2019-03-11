@@ -1,6 +1,6 @@
 {
   "name": "kube-icinga",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Icinga2 autodiscovery service for kubernetes",
   "main": "main.js",
   "scripts": {
