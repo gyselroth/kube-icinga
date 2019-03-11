@@ -1,3 +1,6 @@
 .editorconfig
-build
-node_modules
+coverage
+tests
+data
+src
+tsconfig.json
