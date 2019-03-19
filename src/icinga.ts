@@ -93,16 +93,20 @@ export default class Icinga {
   /**
    * Create service group
    */
-  public applyServiceGroup(name: string): Promise<boolean> {
+  public applyServiceGroup(name: string, definition={}): Promise<boolean> {
+    let group = {
+      attrs: definition
+    };
+
     return new Promise((resolve, reject) => {
-      this.logger.info(`apply service group ${name} aka kubernetes namespace`);
+      this.logger.info(`apply service group ${name} aka kubernetes namespace`, {serviceGroup: group});
 
       this.icingaClient.getServiceGroup(name, (err, result) => {
         if (err) {
           if (err.Statuscode == '404') {
             this.logger.info(`service group ${name} on monitoring was not found, create one`, {error: err});
 
-            this.icingaClient.createServiceGroup(name, name, [], (err, result) => {
+            this.icingaClient.createServiceGroupCustom(JSON.stringify(group), name, (err, result) => {
               if (err) {
                 this.logger.error(`failed create service group ${name}`, {error: err});
                 resolve(false);

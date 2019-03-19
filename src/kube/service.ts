@@ -9,6 +9,7 @@ interface ServiceTypeOptions {
   applyServices?: boolean;
   hostDefinition?: any;
   serviceDefinition?: any;
+  serviceGroupDefinition?: any;
   hostTemplates?: string[];
   serviceTemplates?: string[];
 }
@@ -26,6 +27,7 @@ const defaults: ServiceOptions = {
     applyServices: true,
     hostDefinition: {},
     serviceDefinition: {},
+    serviceGroupDefinition: {},
     hostTemplates: [],
     serviceTemplates: [],
   },
@@ -35,6 +37,7 @@ const defaults: ServiceOptions = {
     applyServices: true,
     hostDefinition: {},
     serviceDefinition: {},
+    serviceGroupDefinition: {},
     hostTemplates: [],
     serviceTemplates: [],
   },
@@ -44,6 +47,7 @@ const defaults: ServiceOptions = {
     applyServices: true,
     hostDefinition: {},
     serviceDefinition: {},
+    serviceGroupDefinition: {},
     hostTemplates: [],
     serviceTemplates: [],
   },
@@ -133,7 +137,7 @@ export default class Service extends Resource {
     }
 
     if (options.applyServices) {
-      await this.icinga.applyServiceGroup(definition.metadata.namespace);
+      await this.icinga.applyServiceGroup(definition.metadata.namespace, options.serviceGroupDefinition);
 
       for (const servicePort of definition.spec.ports) {
         let port = JSON.parse(JSON.stringify(service));

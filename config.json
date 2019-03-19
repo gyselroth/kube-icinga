@@ -10,6 +10,9 @@
     "apiPassword": "kube-icinga"
   },
   "kubernetes": {
+    "namespaces": {
+      "serviceGroupDefinition": {}
+    },
     "nodes": {
       "discover": true,
       "hostDefinition": {},

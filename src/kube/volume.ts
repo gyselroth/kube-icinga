@@ -10,6 +10,7 @@ interface VolumeOptions {
   hostName?: string;
   hostDefinition?: object;
   serviceDefinition?: object;
+  serviceGroupDefinition?: object;
   hostTemplates?: string[];
   serviceTemplates?: string[];
 }
@@ -27,6 +28,7 @@ export default class Volume extends Resource {
     hostName: 'kubernetes-volumes',
     hostDefinition: {},
     serviceDefinition: {},
+    serviceGroupDefinition: {},
     hostTemplates: [],
     serviceTemplates: [],
   };
@@ -89,7 +91,7 @@ export default class Volume extends Resource {
 
       if (definition.spec.claimRef.namespace) {
         groups.push(definition.spec.claimRef.namespace);
-        await this.icinga.applyServiceGroup(definition.spec.claimRef.namespace);
+        await this.icinga.applyServiceGroup(definition.spec.claimRef.namespace, this.options.serviceGroupDefinition);
       }
 
       let templates = this.options.serviceTemplates;

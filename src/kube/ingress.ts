@@ -10,6 +10,7 @@ interface IngressOptions {
   attachToNodes?: boolean;
   hostDefinition?: object;
   serviceDefinition?: object;
+  serviceGroupDefinition?: object;
   hostTemplates?: string[];
   serviceTemplates?: string[];
 }
@@ -27,6 +28,7 @@ export default class Ingress extends Resource {
     attachToNodes: false,
     hostDefinition: {},
     serviceDefinition: {},
+    serviceGroupDefinition: {},
     hostTemplates: [],
     serviceTemplates: [],
   };
@@ -86,9 +88,9 @@ export default class Ingress extends Resource {
     let service = this.prepareResource(definition);
     let templates = this.options.serviceTemplates;
     templates = templates.concat(this.prepareTemplates(definition));
-
+    
     if (this.options.applyServices) {
-      await this.icinga.applyServiceGroup(definition.metadata.namespace);
+      await this.icinga.applyServiceGroup(definition.metadata.namespace, this.options.serviceGroupDefinition);
 
       for (const spec of definition.spec.rules) {
         for (const path of spec.http.paths) {

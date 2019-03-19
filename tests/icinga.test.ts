@@ -109,15 +109,15 @@ describe('icinga', () => {
 
   describe('apply service group', () => {
     it('icinga service group does exists', async () => {
-      IcingaApi.createServiceGroup = jest.fn();
+      IcingaApi.createServiceGroupCustom = jest.fn();
       IcingaApi.getServiceGroup = jest.fn()
         .mockImplementation((ServiceGroup, cb) => cb(null, {foo: "bar"}));
 
-      await expect(icinga.applyServiceGroup('foobar')).resolves.toEqual(true); 
+      await expect(icinga.applyServiceGroup('foobar', {zone: "foo"})).resolves.toEqual(true); 
       const calls = IcingaApi.getServiceGroup.mock.calls;
       expect(calls.length).toBe(1);
       expect(calls[0][0]).toBe('foobar');
-      expect(IcingaApi.createServiceGroup.mock.calls.length).toBe(0);
+      expect(IcingaApi.createServiceGroupCustom.mock.calls.length).toBe(0);
     });
 
     it('get service group error response', async () => {
@@ -131,42 +131,43 @@ describe('icinga', () => {
       const calls = IcingaApi.getServiceGroup.mock.calls;
       expect(calls.length).toBe(1);
       expect(calls[0][0]).toBe('foobar');
-      expect(IcingaApi.createServiceGroup.mock.calls.length).toBe(0);
+      expect(IcingaApi.createServiceGroupCustom.mock.calls.length).toBe(0);
     });
     
     it('add new service group', async () => {
-      IcingaApi.createServiceGroup = jest.fn()
-        .mockImplementation((ServiceGroup, display_name, data, cb) => cb(null, {foo: "bar"}));
+      IcingaApi.createServiceGroupCustom = jest.fn()
+        .mockImplementation((ServiceGroup, name, cb) => cb(null, {foo: "bar"}));
 
       IcingaApi.getServiceGroup = jest.fn()
         .mockImplementation((ServiceGroup, cb) => cb({Statuscode: 404}, null));
 
-      await expect(icinga.applyServiceGroup('foobar')).resolves.toEqual(true);
+      await expect(icinga.applyServiceGroup('foobar', {zone: "foo"})).resolves.toEqual(true);
       var calls = IcingaApi.getServiceGroup.mock.calls;
       expect(calls.length).toBe(1);
       expect(calls[0][0]).toBe('foobar');
       
-      calls = IcingaApi.createServiceGroup.mock.calls;
+      calls = IcingaApi.createServiceGroupCustom.mock.calls;
       expect(calls.length).toBe(1);
-      expect(calls[0][0]).toBe('foobar');
+      expect(calls[0][1]).toBe('foobar');
+      expect(calls[0][0]).toBe("{\"attrs\":{\"zone\":\"foo\"}}");
     });
     
     it('add new service group error response', async () => {
-      IcingaApi.createServiceGroup = jest.fn()
-        .mockImplementation((ServiceGroup, display_name, data, cb) => cb({Statuscode: 500}, null));
+      IcingaApi.createServiceGroupCustom = jest.fn()
+        .mockImplementation((ServiceGroup, name, cb) => cb({Statuscode: 500}, null));
 
       IcingaApi.getServiceGroup = jest.fn()
         .mockImplementation((ServiceGroup, cb) => cb({Statuscode: 404}, null));
 
-      await expect(icinga.applyServiceGroup('foobar')).resolves.toEqual(false);
+      await expect(icinga.applyServiceGroup('foobar', {zone: "foo"})).resolves.toEqual(false);
 
       var calls = IcingaApi.getServiceGroup.mock.calls;
       expect(calls.length).toBe(1);
       expect(calls[0][0]).toBe('foobar');
       
-      calls = IcingaApi.createServiceGroup.mock.calls;
+      calls = IcingaApi.createServiceGroupCustom.mock.calls;
       expect(calls.length).toBe(1);
-      expect(calls[0][0]).toBe('foobar');
+      expect(calls[0][1]).toBe('foobar');
     });
   });
 

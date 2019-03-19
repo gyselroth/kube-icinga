@@ -1,13 +1,20 @@
+## 2.1.0
+**Maintainer**: Raffael Sahli <sahli@gyselroth.com>\
+**Date**: Tue Mar 19 2019 16:01:20 CET 2019
+
+* [FEATURE] Change servicegroup definition #17
+
+
 ## 2.0.1
 **Maintainer**: Raffael Sahli <sahli@gyselroth.com>\
-**Date**: Thu 21 Feb 2019 17:14:20 PM ET
+**Date**: Thu Feb 21 17:14:20 CET 2019
 
 * [FIX] none string environment variables not parsed correctly into config #10
 
 
 ## 2.0.0
 **Maintainer**: Raffael Sahli <sahli@gyselroth.com>\
-**Date**: Thu 21 Feb 2019 14:28:20 PM ET
+**Date**: Thu Feb 21 14:28:20 PM CET 2019
 
 * [FIX] Fixes "(node:25116) UnhandledPromiseRejectionWarning: TypeError: result is not iterable" due error response from icinga
 * [FIX] Better error handling and catching various uncaught promises
@@ -31,7 +38,7 @@
 
 ## 1.0.1
 **Maintainer**: Raffael Sahli <sahli@gyselroth.com>\
-**Date**: Fri 01 Jun 2018 01:18:20 PM CEST
+**Date**: Fri Jun 01 01:18:20 CEST 2018
 
 * [FIX] fixed protocol (service ports.protocol) lowercase
 * [CHANGE] config logger.level => log.level
