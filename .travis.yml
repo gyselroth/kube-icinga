@@ -12,7 +12,7 @@ cache:
   directories:
     - "node_modules"
 after_success:
-  - if [[ "$version" == *"-"* ]]; then export docker_tag=latest-unstable; else export docker_tag=latest; fi;
+  - if [[ "$TRAVIS_TAG" == *"-"* ]]; then export docker_tag=latest-unstable; else export docker_tag=latest; fi;
   - test "$TRAVIS_TAG" != "" && version=${TRAVIS_TAG:1}; 
   - test "$TRAVIS_TAG" != "" && docker build -t gyselroth/kube-icinga:$version .
   - test "$TRAVIS_TAG" != "" && docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
