@@ -148,13 +148,18 @@ export default class Volume extends Resource {
         this.logger.debug('received kubernetes persistent volume resource', {object});
 
         if (object.object.kind !== 'PersistentVolume') {
-          this.logger.error('skip invalid object', {object: object});
+          this.logger.error('skip invalid persistent volume object', {object: object});
           return;
         }
 
+        if (object.object.metadata.annotations && object.object.metadata.annotations['kube-icinga/discover'] === 'false') {
+          this.logger.info('skip persistent volume object, kube-icinga/discover===false', {object: object});
+          return;
+        }        
+
         if (object.type == 'MODIFIED' || object.type == 'DELETED') {
           await this.deleteObject(object.object).catch((err) => {
-            this.logger.error('failed to remove objects', {error: err});
+            this.logger.error('failed to remove persistent objects', {error: err});
           });
         }
 

@@ -77,6 +77,11 @@ export default class Node extends Resource {
           return;
         }
 
+        if (object.object.metadata.annotations && object.object.metadata.annotations['kube-icinga/discover'] === 'false') {
+          this.logger.info('skip node object, kube-icinga/discover===false', {object: object});
+          return;
+        }
+
         if (object.type == 'DELETED') {
           await this.icinga.deleteHost(object.object.metadata.name);
         }

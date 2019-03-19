@@ -163,6 +163,7 @@ You may use the following annotations:
 
 | Name | Description |
 |-------|------------|
+| `kube-icinga/discover` | Disable icinga2 monitoring deployment for the given object. Set `kube-icinga/discover` to `"false"`. Note that by default all objects get deployed to icinga if discovery for the resource type is enabled.  |
 | `kube-icinga/check_command` | Use a custom icinga check command. |
 | `kube-icinga/host` | Use a custom hostname (to which icinga host a service gets bound to). |
 | `kube-icinga/template` | Use a custom icinga template. |

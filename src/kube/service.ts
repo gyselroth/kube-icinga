@@ -222,11 +222,16 @@ export default class Service extends Resource {
           this.logger.error('skip invalid service object', {object: object});
           return;
         }
-
+          
+        if (object.object.metadata.annotations && object.object.metadata.annotations['kube-icinga/discover'] === 'false') {
+          this.logger.info('skip service object, kube-icinga/discover===false', {object: object});
+          return;
+        }
+        
         if (!this.options[object.object.spec.type].discover) {
           this.logger.debug('skip service object, since ['+object.object.spec.type+'] is not enabled for discover', {object: object});
           return;
-        }
+        }        
 
         if (object.type == 'MODIFIED' || object.type == 'DELETED') {
           await this.deleteObject(object.object).catch((err) => {

@@ -3,6 +3,7 @@
 **Date**: Tue Mar 19 2019 16:01:20 CET 2019
 
 * [FEATURE] Change servicegroup definition #17
+* Enable provisioning on a resource basis #14
 
 
 ## 2.0.1

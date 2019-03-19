@@ -163,6 +163,11 @@ export default class Ingress extends Resource {
           this.logger.error('skip invalid ingress object', {object: object});
           return;
         }
+        
+        if (object.object.metadata.annotations && object.object.metadata.annotations['kube-icinga/discover'] === 'false') {
+          this.logger.info('skip ingress object, kube-icinga/discover===false', {object: object});
+          return;
+        }
 
         if (object.type == 'MODIFIED' || object.type == 'DELETED') {
           await this.deleteObject(object.object).catch((err) => {
