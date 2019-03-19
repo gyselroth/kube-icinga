@@ -89,7 +89,7 @@ export default class Icinga {
       });
     });
   }
-
+    
   /**
    * Create service group
    */
