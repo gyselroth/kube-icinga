@@ -21,7 +21,7 @@ const kubeVolume = new Volume(logger, kubeNode, icinga, config.kubernetes.volume
 async function main() {
   if (config.cleanup) {
     logger.info('cleanup all kube icinga objects (vars._kubernetes == true)');
-    
+
     await icinga.deleteServicesByFilter('service.vars._kubernetes == true').catch((err) => {
       logger.error('failed to cleanup icinga services', {error: err});
     });

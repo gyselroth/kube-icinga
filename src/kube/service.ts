@@ -136,7 +136,7 @@ export default class Service extends Resource {
     }
 
     if (options.applyServices) {
-      await this.icinga.applyServiceGroup(definition.metadata.namespace, Object.assign({"vars._kubernetes": true}, options.serviceGroupDefinition));
+      await this.icinga.applyServiceGroup(definition.metadata.namespace, Object.assign({'vars._kubernetes': true}, options.serviceGroupDefinition));
 
       for (const servicePort of definition.spec.ports) {
         let port = JSON.parse(JSON.stringify(service));

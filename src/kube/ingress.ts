@@ -90,7 +90,7 @@ export default class Ingress extends Resource {
     templates = templates.concat(this.prepareTemplates(definition));
 
     if (this.options.applyServices) {
-      await this.icinga.applyServiceGroup(definition.metadata.namespace, Object.assign({"vars._kubernetes": true}, this.options.serviceGroupDefinition));
+      await this.icinga.applyServiceGroup(definition.metadata.namespace, Object.assign({'vars._kubernetes': true}, this.options.serviceGroupDefinition));
 
       for (const spec of definition.spec.rules) {
         for (const path of spec.http.paths) {

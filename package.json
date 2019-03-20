@@ -29,19 +29,19 @@
   "dependencies": {
     "icinga2-api": "github:raffis/nodejs-icinga2api",
     "json-stream": "^1.0.0",
-    "kubernetes-client": "^5.3.0",
+    "kubernetes-client": "^5.4.0",
     "winston": "^3.0.0"
   },
   "devDependencies": {
     "@types/jest": "^22.2.3",
-    "@types/node": "^10.1.2",
-    "coveralls": "^3.0.1",
+    "@types/node": "^10.14.1",
+    "coveralls": "^3.0.3",
     "eslint": "^4.19.1",
     "eslint-config-google": "^0.9.1",
     "jest": "^23.0.0",
     "ts-jest": "^22.4.6",
     "typescript": "^2.9.2",
-    "typescript-eslint-parser": "^15.0.0"
+    "typescript-eslint-parser": "^22.0.0"
   },
   "jest": {
     "transform": {
