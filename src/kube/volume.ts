@@ -19,10 +19,10 @@ interface VolumeOptions {
  * kubernetes ingresses
  */
 export default class Volume extends Resource {
-  protected logger: Logger;
   protected icinga: Icinga;
   protected kubeNode: KubeNode;
   protected options = {
+    discover: true,
     applyServices: true,
     attachToNodes: false,
     hostName: 'kubernetes-volumes',
@@ -91,7 +91,7 @@ export default class Volume extends Resource {
 
       if (definition.spec.claimRef.namespace) {
         groups.push(definition.spec.claimRef.namespace);
-        await this.icinga.applyServiceGroup(definition.spec.claimRef.namespace, this.options.serviceGroupDefinition);
+        await this.icinga.applyServiceGroup(definition.spec.claimRef.namespace, Object.assign({"vars._kubernetes": true}, this.options.serviceGroupDefinition));
       }
 
       let templates = this.options.serviceTemplates;
@@ -146,28 +146,7 @@ export default class Volume extends Resource {
       let stream = provider();
       stream.on('data', async (object) => {
         this.logger.debug('received kubernetes persistent volume resource', {object});
-
-        if (object.object.kind !== 'PersistentVolume') {
-          this.logger.error('skip invalid persistent volume object', {object: object});
-          return;
-        }
-
-        if (object.object.metadata.annotations && object.object.metadata.annotations['kube-icinga/discover'] === 'false') {
-          this.logger.info('skip persistent volume object, kube-icinga/discover===false', {object: object});
-          return;
-        }        
-
-        if (object.type == 'MODIFIED' || object.type == 'DELETED') {
-          await this.deleteObject(object.object).catch((err) => {
-            this.logger.error('failed to remove persistent objects', {error: err});
-          });
-        }
-
-        if (object.type == 'ADDED' || object.type == 'MODIFIED') {
-          this.prepareObject(object.object).catch((err) => {
-            this.logger.error('failed to handle resource', {error: err});
-          });
-        }
+        return this.handleResource('PersistentVolume', object, this.options);
       });
 
       stream.on('finish', () => {

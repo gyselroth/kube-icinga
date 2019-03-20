@@ -19,10 +19,10 @@ interface IngressOptions {
  * kubernetes ingresses
  */
 export default class Ingress extends Resource {
-  protected logger: Logger;
   protected icinga: Icinga;
   protected kubeNode: KubeNode;
   protected options = {
+    discover: true,
     applyServices: true,
     hostName: 'kubernetes-ingresses',
     attachToNodes: false,
@@ -88,9 +88,9 @@ export default class Ingress extends Resource {
     let service = this.prepareResource(definition);
     let templates = this.options.serviceTemplates;
     templates = templates.concat(this.prepareTemplates(definition));
-    
+
     if (this.options.applyServices) {
-      await this.icinga.applyServiceGroup(definition.metadata.namespace, this.options.serviceGroupDefinition);
+      await this.icinga.applyServiceGroup(definition.metadata.namespace, Object.assign({"vars._kubernetes": true}, this.options.serviceGroupDefinition));
 
       for (const spec of definition.spec.rules) {
         for (const path of spec.http.paths) {
@@ -158,28 +158,7 @@ export default class Ingress extends Resource {
       let stream = provider();
       stream.on('data', async (object) => {
         this.logger.debug('received kubernetes ingress resource', {object});
-
-        if (object.object.kind !== 'Ingress') {
-          this.logger.error('skip invalid ingress object', {object: object});
-          return;
-        }
-        
-        if (object.object.metadata.annotations && object.object.metadata.annotations['kube-icinga/discover'] === 'false') {
-          this.logger.info('skip ingress object, kube-icinga/discover===false', {object: object});
-          return;
-        }
-
-        if (object.type == 'MODIFIED' || object.type == 'DELETED') {
-          await this.deleteObject(object.object).catch((err) => {
-            this.logger.error('failed to remove objects', {error: err});
-          });
-        }
-
-        if (object.type == 'ADDED' || object.type == 'MODIFIED') {
-          this.prepareObject(object.object).catch((err) => {
-            this.logger.error('failed to handle resource', {error: err});
-          });
-        }
+        return this.handleResource('Ingress', object, this.options);
       });
 
       stream.on('finish', () => {

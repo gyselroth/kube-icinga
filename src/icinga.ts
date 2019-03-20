@@ -89,13 +89,13 @@ export default class Icinga {
       });
     });
   }
-    
+
   /**
    * Create service group
    */
   public applyServiceGroup(name: string, definition={}): Promise<boolean> {
     let group = {
-      attrs: definition
+      attrs: definition,
     };
 
     return new Promise((resolve, reject) => {

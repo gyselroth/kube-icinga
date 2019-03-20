@@ -75,7 +75,8 @@ describe('kubernetes volumes', () => {
         return json;
       });
 
-      await bindings.data(resource);
+      var result = await bindings.data(resource);
+      expect(result).toBe(true);  
       expect(Icinga.applyHost.mock.calls.length).toBe(1);  
       expect(Icinga.deleteServicesByFilter.mock.calls.length).toBe(0);
     });
@@ -106,7 +107,8 @@ describe('kubernetes volumes', () => {
         return json;
       });
 
-      await bindings.data(resource);
+      var result = await bindings.data(resource);
+      expect(result).toBe(true);  
       expect(Icinga.applyHost.mock.calls.length).toBe(1);  
     });
 
@@ -140,27 +142,20 @@ describe('kubernetes volumes', () => {
         return json;
       });
 
-      await bindings.data(resource);
+      var result = await bindings.data(resource);
+      expect(result).toBe(true);  
       expect(Icinga.applyHost.mock.calls.length).toBe(1);  
       expect(Icinga.deleteServicesByFilter.mock.calls.length).toBe(0);  
     });
 
-    it('delete volume object delete', async () => {
+    it('skip resource with invalid kind', async () => {
       let instance = new Volume(Logger, Node, Icinga);
 
+      fixture.kind = 'foo';
       var resource = {  
-        type: 'DELETED', 
+        type: 'ADDED', 
         object: fixture
       };
-
-      Icinga.applyHost = jest.fn();
-      Icinga.deleteServicesByFilter = function(definition) {
-        expect(definition).toEqual('service.vars.kubernetes.metadata.uid==\"xyz\"');
-        return new Promise((resolve,reject) => {
-          resolve(true);
-        });
-      };
-
 
       var bindings = {};
       var json = {
@@ -173,8 +168,33 @@ describe('kubernetes volumes', () => {
         return json;
       });
 
-      await bindings.data(resource);
-      expect(Icinga.applyHost.mock.calls.length).toBe(0);  
+      var result = await bindings.data(resource);
+      expect(result).toBe(false);  
+    });
+    
+    it('skip resource kube-icinga/discover===false', async () => {
+      let instance = new Volume(Logger, Node, Icinga);
+
+      fixture.metadata.annotations['kube-icinga/discover'] = 'false';
+      var resource = {  
+        type: 'ADDED', 
+        object: fixture
+      };
+
+      var bindings = {};
+      var json = {
+        on: function(name, callback) {
+          bindings[name] = callback.bind(instance);
+        }
+      };
+    
+      await instance.kubeListener(() => {
+        return json;
+      });
+
+      var result = await bindings.data(resource);
+      expect(result).toBe(false);  
+      });
     });
   });
 

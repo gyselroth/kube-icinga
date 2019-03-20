@@ -180,6 +180,90 @@ describe('kubernetes services', () => {
 
       await bindings.data(resource);
       expect(Icinga.applyHost.mock.calls.length).toBe(0);  
+      });
+
+    it('skip headless service', async () => {
+      let instance = new Service(Logger, Node, Icinga, {
+        ClusterIP: {
+          discover: true
+        }
+      });
+
+      fixture.spec.clusterIP = 'None';
+      var resource = {  
+        type: 'ADDED', 
+        object: fixture
+      };
+
+      var bindings = {};
+      var json = {
+        on: function(name, callback) {
+          bindings[name] = callback.bind(instance);
+        }
+      };
+    
+      await instance.kubeListener(() => {
+        return json;
+      });
+
+      var result = await bindings.data(resource);
+      expect(result).toBe(false);  
+    });
+
+    it('skip resource with invalid kind', async () => {
+      let instance = new Service(Logger, Node, Icinga, {
+        ClusterIP: {
+          discover: true
+        }
+      });
+
+      fixture.kind = 'foo';
+      var resource = {  
+        type: 'ADDED', 
+        object: fixture
+      };
+
+      var bindings = {};
+      var json = {
+        on: function(name, callback) {
+          bindings[name] = callback.bind(instance);
+        }
+      };
+    
+      await instance.kubeListener(() => {
+        return json;
+      });
+
+      var result = await bindings.data(resource);
+      expect(result).toBe(false);  
+    });
+    
+    it('skip resource kube-icinga/discover===false', async () => {
+      let instance = new Service(Logger, Node, Icinga, {
+        ClusterIP: {
+          discover: true
+        }
+      });
+
+      fixture.metadata.annotations['kube-icinga/discover'] = 'false';
+      var resource = {  
+        type: 'ADDED', 
+        object: fixture
+      };
+
+      var bindings = {};
+      var json = {
+        on: function(name, callback) {
+          bindings[name] = callback.bind(instance);
+        }
+      };
+    
+      await instance.kubeListener(() => {
+        return json;
+      });
+
+      var result = await bindings.data(resource);
+      expect(result).toBe(false);  
     });
   });
 

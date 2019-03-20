@@ -61,7 +61,6 @@ export default class Service extends Resource {
   static readonly TYPE_NODEPORT = 'NodePort';
   static readonly TYPE_LOADBALANCER = 'LoadBalancer';
 
-  protected logger: Logger;
   protected icinga: Icinga;
   protected kubeNode: KubeNode;
   protected options: ServiceOptions = defaults;
@@ -137,7 +136,7 @@ export default class Service extends Resource {
     }
 
     if (options.applyServices) {
-      await this.icinga.applyServiceGroup(definition.metadata.namespace, options.serviceGroupDefinition);
+      await this.icinga.applyServiceGroup(definition.metadata.namespace, Object.assign({"vars._kubernetes": true}, options.serviceGroupDefinition));
 
       for (const servicePort of definition.spec.ports) {
         let port = JSON.parse(JSON.stringify(service));
@@ -218,32 +217,12 @@ export default class Service extends Resource {
       stream.on('data', async (object) => {
         this.logger.debug('received kubernetes service resource', {object});
 
-        if (object.object.kind !== 'Service') {
-          this.logger.error('skip invalid service object', {object: object});
-          return;
-        }
-          
-        if (object.object.metadata.annotations && object.object.metadata.annotations['kube-icinga/discover'] === 'false') {
-          this.logger.info('skip service object, kube-icinga/discover===false', {object: object});
-          return;
-        }
-        
-        if (!this.options[object.object.spec.type].discover) {
-          this.logger.debug('skip service object, since ['+object.object.spec.type+'] is not enabled for discover', {object: object});
-          return;
-        }        
-
-        if (object.type == 'MODIFIED' || object.type == 'DELETED') {
-          await this.deleteObject(object.object).catch((err) => {
-            this.logger.error('failed to remove objects', {error: err});
-          });
+        if (object.object.spec.clusterIP === 'None') {
+          this.logger.info('skip headless service object (use pod provisioning instead)', {object: object});
+          return false;
         }
 
-        if (object.type == 'ADDED' || object.type == 'MODIFIED') {
-          this.prepareObject(object.object).catch((err) => {
-            this.logger.error('failed to handle resource', {error: err});
-          });
-        }
+        return this.handleResource('Service', object, this.options[object.object.spec.type]);
       });
 
       stream.on('finish', () => {

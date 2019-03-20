@@ -12,7 +12,6 @@ interface NodeOptions {
  * kubernetes hosts
  */
 export default class Node extends Resource {
-  protected logger: Logger;
   protected icinga: Icinga;
   protected nodes: string[] = [];
   protected options: NodeOptions = {
@@ -60,6 +59,13 @@ export default class Node extends Resource {
   }
 
   /**
+   * Delete object
+   */
+  protected deleteObject(definition: any): Promise<boolean> {
+    return this.icinga.deleteHost(definition.metadata.name);
+  }
+
+  /**
    * Start kube listener
    */
   public async kubeListener(provider) {
@@ -68,29 +74,11 @@ export default class Node extends Resource {
       stream.on('data', async (object) => {
         // ignore MODIFIER for kube nodes
         if (object.type === 'MODIFIED') {
-          return;
+          return false;
         }
 
         this.logger.debug('received kubernetes host resource', {object});
-        if (object.object.kind !== 'Node') {
-          this.logger.error('skip invalid node object', {object: object});
-          return;
-        }
-
-        if (object.object.metadata.annotations && object.object.metadata.annotations['kube-icinga/discover'] === 'false') {
-          this.logger.info('skip node object, kube-icinga/discover===false', {object: object});
-          return;
-        }
-
-        if (object.type == 'DELETED') {
-          await this.icinga.deleteHost(object.object.metadata.name);
-        }
-
-        if (object.type == 'ADDED') {
-          this.prepareObject(object.object).catch((err) => {
-            this.logger.error('failed to handle resource', {error: err});
-          });
-        }
+        return this.handleResource('Node', object, this.options);
       });
 
       stream.on('finish', () => {

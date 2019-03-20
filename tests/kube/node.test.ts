@@ -74,7 +74,8 @@ describe('kubernetes nodes', () => {
         return json;
       });
 
-      bindings.data(resource);
+      var result = await bindings.data(resource);
+      expect(result).toBe(false);
       expect(instance.prepareObject.mock.calls.length).toBe(0);  
     });
     
@@ -103,6 +104,54 @@ describe('kubernetes nodes', () => {
       expect(Icinga.deleteHost.mock.calls.length).toEqual(1)
       expect(instance.prepareObject.mock.calls.length).toEqual(0);  
     });
+
+    it('skip resource with invalid kind', async () => {
+      let instance = new Node(Logger, Icinga)
+
+      fixture.kind = 'foo';
+      var resource = {  
+        type: 'ADDED', 
+        object: fixture
+      };
+
+      var bindings = {};
+      var json = {
+        on: function(name, callback) {
+          bindings[name] = callback.bind(instance);
+        }
+      };
+    
+      await instance.kubeListener(() => {
+        return json;
+      });
+
+      var result = await bindings.data(resource);
+      expect(result).toBe(false);  
+    });
+    
+    it('skip resource kube-icinga/discover===false', async () => {
+      let instance = new Node(Logger, Icinga);
+
+      fixture.metadata.annotations['kube-icinga/discover'] = 'false';
+      var resource = {  
+        type: 'ADDED', 
+        object: fixture
+      };
+
+      var bindings = {};
+      var json = {
+        on: function(name, callback) {
+          bindings[name] = callback.bind(instance);
+        }
+      };
+    
+      await instance.kubeListener(() => {
+        return json;
+      });
+
+      var result = await bindings.data(resource);
+      expect(result).toBe(false);  
+    });      
   });
 
   describe('add node object', () => {
