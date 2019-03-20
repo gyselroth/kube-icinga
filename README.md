@@ -36,6 +36,7 @@ Multiple watchers are bootstraped and listen for any kubernetes changes. Those c
   * [Volumes](#volumes)
 * [Requirements](#requirements)
 * [Setup icinga2 api user](#setup-icinga2-api-user)
+  * [Using an icinga satellite](#using-an-icinga-satellite)
 * [Deployment](#deployment)
 * [Resource visibility](#resource-visibility)
 * [Advanced topics](#advanced-topics)
@@ -74,6 +75,9 @@ Dynamic service host objects get named `service-${namespace}-${name}`. You may a
 ClusterIP provisioning is disabled by default since ClusterIP services are only visible internally in kubernetes. You need either an icinga deployment within the kubernetes cluster or optionally 
 an icinga [satelite](https://www.icinga.com/docs/icinga2/latest/doc/06-distributed-monitoring) if you decide to enable ClusterIP provisioning.
 NodePort services get attached by default directly to the kubernetes icinga node objects.
+
+>**Note** You may also enable provisioning on single kube resource directly using an [annotation](#overwrite-icinga-object-definitions-directly-in-kubernetes-resources) `kube-icinga/discover: 'true'` despite global discovering for a resource type is disabled. The same applies the other way around, if 
+provisioning for a certain resource is enabled, you may set `kube-icinga/discover: 'false'` to disable a single resource. 
 
 By default services get checked with the service protocol which usually result in check_tcp. However you may set custom settings using annotations (or global service settings). 
 
@@ -115,7 +119,30 @@ kubectl -f https://raw.githubusercontent.com/gyselroth/kube-icinga/master/kube-i
 ```
 (Change the secret password and ICINGA_ADDRESS value accordingly)
 
->**Note**: kube-icinga will be created as single pod deployment in the kubernetes kube-system namespace. You may changes this behaviour.
+>**Note**: kube-icinga will be created as single pod deployment in the kubernetes kube-system namespace. 
+
+### Using an icinga satellite
+
+If your icinga2 server operates outside your kubernetes cluster (Which is supported), you can not enable provisioning for resource types which are only reachable 
+inside your kubernetes cluster. For example services of type ClusterIP. (Provisioning for such resources is disabled by default.)
+
+If one can not migrate an existing icinga2 installation to kubernetes for whatever reason but still want to monitor cluster internal resources, you may deploy an [icinga2 satellite](https://icinga.com/docs/icinga2/latest/doc/06-distributed-monitoring/#clientsatellite-setup) pod to kubernetes in a separate zone and monitor such resources via the satellite.
+
+Using this configuration will enable clusterip service provisoning and put those in an own zone named `kubernetes`. (Note you have to setup this zone first, see icinga2 satellite setup).
+
+```yaml
+- env:
+  - name: KUBERNETES_SERVICES_CLUSTERIP_DISCOVER
+    value: "true"
+  - name: KUBERNETES_SERVICES_CLUSTERIP_SERVICE_DEFINITION
+    value: '{"zone":"kubernetes","command_endpoint":"kubernetes"}'
+  - name: KUBERNETES_SERVICES_CLUSTERIP_HOST_DEFINITION
+    value: '{"zone":"kubernetes","command_endpoint":"kubernetes"}'
+  - name: KUBERNETES_NAMESPACES_SERVICEGROUP_DEFINITION
+    value: '{"zone":"global-templates"}'
+```
+
+>**Note** Servegroups are put in an own global zone named `global-templates`. Usually servicegroups are required on the master zone for other resource types such as ingresses (if they are not in a separate zone as well) and the satellite zone.
 
 ### Resource visibility
 The resource yaml also contains a new cluster role `kube-icinga`. kube-icinga will create icinga objects for all visible namespaces which are by default all namespaces since it is a kubernetes cluster role.
@@ -169,7 +196,7 @@ You may use the following annotations:
 | `kube-icinga/template` | Use a custom icinga template. |
 | `kube-icinga/definition` | JSON encoded icinga definition which may contain advanced icinga options and gets merged with the defaults. |
 
-
+Example resource with kube-icinga annotations:
 ```yaml
 kind: PersistentVolume
 apiVersion: v1
