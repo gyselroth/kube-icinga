@@ -7,6 +7,7 @@
 * [CHANGE] Added more unit tests
 * [CHANGE] Headless service monitoring #18
 * [CHANGE] Upgrade to typescript 3.x / jest 24.x #22
+* [FIX] ClusterIP service check for UDP fails #20
 
 
 ## 2.0.1

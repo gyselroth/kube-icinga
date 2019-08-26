@@ -422,6 +422,39 @@ describe('kubernetes services', () => {
       expect(calls[1][2]['vars.http_port']).toBe(10000);
       expect(calls[1][2]['vars.foo']).toBe('bar');
     });
+    
+    it('use dummy check for udp protocol', async () => {
+      let instance = new Service(logger, node, icinga, {
+        ClusterIP: {
+          applyServices: true,
+        } 
+      });
+
+      fixture.spec.ports[1].protocol = 'UDP';
+      await instance.prepareObject(fixture);  
+      const calls = icinga.applyService.mock.calls;
+      expect(icinga.applyService.mock.instances.length).toBe(2);
+      expect(calls[1][2].check_command).toBe('dummy');
+    });
+    
+    it('use custom check plugin for for udp protocol', async () => {
+      let instance = new Service(logger, node, icinga, {
+        ClusterIP: {
+          applyServices: true,
+          serviceDefinition: {
+            'check_command': 'dns',
+          }
+        } 
+      });
+
+      icinga.hasCheckCommand.mockResolvedValue(true);
+      fixture.spec.ports[1].protocol = 'UDP';
+      await instance.prepareObject(fixture);  
+      const calls = icinga.applyService.mock.calls;
+      expect(icinga.applyService.mock.instances.length).toBe(2);
+      expect(calls[1][2].check_command).toBe('dns');
+      expect(calls[1][2]['vars.dns_port']).toBe(10000);
+    });
 
     it('create all service objects with custom service definition, check_command not found, fallback to protocol', async () => {
       let instance = new Service(logger, node, icinga, {

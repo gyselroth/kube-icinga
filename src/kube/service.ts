@@ -52,15 +52,20 @@ const defaults: ServiceOptions = {
     serviceTemplates: [],
   },
 };
+  
+const TYPE_CLUSTERIP = 'ClusterIP';
+const TYPE_NODEPORT = 'NodePort';
+const TYPE_LOADBALANCER = 'LoadBalancer';
+
+//We can not simply monitor udp services out of the box without manual intervention, therefore udp checks are by default dummies.
+const PROTOCOL_MAP = {
+  'udp': 'dummy'
+};
 
 /**
  * kubernetes services
  */
 export default class Service extends Resource {
-  static readonly TYPE_CLUSTERIP = 'ClusterIP';
-  static readonly TYPE_NODEPORT = 'NodePort';
-  static readonly TYPE_LOADBALANCER = 'LoadBalancer';
-
   protected icinga: Icinga;
   protected kubeNode: KubeNode;
   protected options: ServiceOptions = defaults;
@@ -101,7 +106,7 @@ export default class Service extends Resource {
    * Apply service
    */
   protected async applyService(host: string, name: string, type: string, definition, templates: string[]) {
-    if (type === Service.TYPE_NODEPORT) {
+    if (type === TYPE_NODEPORT) {
       for (const node of this.kubeNode.getWorkerNodes()) {
         this.icinga.applyService(node, name, definition, templates);
       }
@@ -130,7 +135,7 @@ export default class Service extends Resource {
     let templates = options.serviceTemplates;
     templates = templates.concat(this.prepareTemplates(definition));
 
-    if (serviceType !== Service.TYPE_NODEPORT) {
+    if (serviceType !== TYPE_NODEPORT) {
       let address = options.hostName || definition.spec.clusterIP;
       await this.applyHost(hostname, address, serviceType, definition, options.hostTemplates);
     }
@@ -145,7 +150,7 @@ export default class Service extends Resource {
           if (hasCommand) {
             this.logger.debug('service can be checked via check command '+port.check_command);
 
-            if (serviceType !== Service.TYPE_NODEPORT) {
+            if (serviceType !== TYPE_NODEPORT) {
               port['vars.'+port.check_command+'_address'] = definition.spec.clusterIP;
             }
 
@@ -159,10 +164,13 @@ export default class Service extends Resource {
         let protocol = servicePort.protocol.toLowerCase();
         let portName = servicePort.name || protocol+':'+servicePort.port;
 
-        if (!port.check_command) {
+        if(!port.check_command && PROTOCOL_MAP[protocol]) {
+          this.logger.debug('using check command '+PROTOCOL_MAP[protocol]+', instad '+port.check_command);
+          port.check_command = PROTOCOL_MAP[protocol];
+        } else if (!port.check_command) {
           port.check_command = protocol;
 
-          if (serviceType !== Service.TYPE_NODEPORT) {
+          if (serviceType !== TYPE_NODEPORT) {
             port['vars.'+protocol+'_address'] = definition.spec.clusterIP;
           }
 

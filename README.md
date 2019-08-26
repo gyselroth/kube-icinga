@@ -81,6 +81,10 @@ provisioning for a certain resource is enabled, you may set `kube-icinga/discove
 
 By default services get checked with the service protocol which usually result in check_tcp. However you may set custom settings using annotations (or global service settings). 
 
+>**Note** UDP services will be created as dummy checks. There is now way for kube-icinga to automatically monitor udp services. However you may set a custom check by setting an [annotation](#overwrite-icinga-object-definitions-directly-in-kubernetes-resources)
+on the kubernetes service.
+
+
 ### Volumes
 Each persistent volume will result in a single icinga service. By default all those services get attached to a single host named `kubernetes-volumes`.
 Like for ingresses and services you may change the same advanced settings for volumes. 
