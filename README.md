@@ -42,7 +42,7 @@ Multiple watchers are bootstraped and listen for any kubernetes changes. Those c
 * [Advanced topics](#advanced-topics)
   * [Using icinga2 apply rules](#using-icinga2-apply-rules)
   * [Globally overwrite icinga object definitions](#globally-overwrite-icinga-object-definitions)
-  * [Overwrite icinga object definitions directly in kubernetes resources](overwrite-icinga-object-definitions-directly-in-kubernetes-resources)
+  * [Overwrite icinga object definitions directly in kubernetes resources](#overwrite-icinga-object-definitions-directly-in-kubernetes-resources)
 * [Configuration](#configuration)
 
 ## Resource types
