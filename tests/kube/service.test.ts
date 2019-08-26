@@ -1,10 +1,9 @@
 import Service from '../../src/kube/service'; 
-import Node from '../../src/kube/node'; 
-import Icinga from '../../src/icinga';
 import Logger from '../../src/logger'; 
-jest.mock('../../src/icinga');
-jest.mock('../../src/kube/node');
+
 jest.mock('../../src/logger');
+var Node = (jest.genMockFromModule('../../src/kube/node') as any).default;
+var Icinga = (jest.genMockFromModule('../../src/icinga') as any).default;
 
 const template = {
     "apiVersion": "v1",
@@ -43,15 +42,31 @@ const template = {
 };
 
 var fixture;
+var logger;
+var node;
+var icinga;
 
 beforeEach(() => {
   fixture = JSON.parse(JSON.stringify(template));
+
+  Node.mockClear();
+  node = new Node();
+
+  logger = Logger;
+
+  Icinga.mockClear();
+  icinga = new Icinga();
 });
 
 describe('kubernetes services', () => {
   describe('service watch stream', () => {
+    var bindings;
+    beforeEach(() => {
+      bindings= {data:function(){}};
+    });
+
     it('do not create icinga service object if typ is disabled for provisioning', async () => {
-      let instance = new Service(Logger, Node, Icinga, {
+      let instance = new Service(logger, node, icinga, {
         ClusterIP: {
           discover: false
         }
@@ -62,10 +77,6 @@ describe('kubernetes services', () => {
         object: fixture
       };
       
-      Icinga.deleteServicesByFilter = jest.fn();
-      Icinga.applyHost = jest.fn();
-      
-      var bindings = {};
       var json = {
         on: function(name, callback) {
           bindings[name] = callback;
@@ -77,12 +88,12 @@ describe('kubernetes services', () => {
       });
 
       await bindings.data(resource);
-      expect(Icinga.applyHost.mock.calls.length).toBe(0);  
-      expect(Icinga.deleteServicesByFilter.mock.calls.length).toBe(0);
+      expect(icinga.applyHost.mock.calls.length).toBe(0);  
+      expect(icinga.deleteServicesByFilter.mock.calls.length).toBe(0);
     });
     
     it('create icinga service object', async () => {
-      let instance = new Service(Logger, Node, Icinga, {
+      let instance = new Service(logger, node, icinga, {
         ClusterIP: {
           discover: true
         }
@@ -92,10 +103,6 @@ describe('kubernetes services', () => {
         object: fixture
       };
       
-      Icinga.deleteServicesByFilter = jest.fn();
-      Icinga.applyHost = jest.fn();
-      
-      var bindings = {};
       var json = {
         on: function(name, callback) {
           bindings[name] = callback;
@@ -107,12 +114,12 @@ describe('kubernetes services', () => {
       });
 
       await bindings.data(resource);
-      expect(Icinga.applyHost.mock.calls.length).toBe(1);  
-      expect(Icinga.deleteServicesByFilter.mock.calls.length).toBe(0);
+      expect(icinga.applyHost.mock.calls.length).toBe(1);  
+      expect(icinga.deleteServicesByFilter.mock.calls.length).toBe(0);
     });
     
     it('modify service object delete and create', async () => {
-      let instance = new Service(Logger, Node, Icinga, {
+      let instance = new Service(logger, node, icinga, {
         ClusterIP: {
           discover: true
         }
@@ -123,15 +130,13 @@ describe('kubernetes services', () => {
         object: fixture
       };
       
-      Icinga.applyHost = jest.fn();
-      Icinga.deleteServicesByFilter = function(definition) {
+      icinga.deleteServicesByFilter = function(definition) {
         expect(definition).toEqual('service.vars.kubernetes.metadata.uid==\"xyz\"');
         return new Promise((resolve,reject) => {
           resolve(true);
         });
       };
 
-      var bindings = {};
       var json = {
         on: async function(name, callback) {
           bindings[name] = callback;
@@ -143,11 +148,11 @@ describe('kubernetes services', () => {
       });
 
       await bindings.data(resource);
-      expect(Icinga.applyHost.mock.calls.length).toBe(1);  
+      expect(icinga.applyHost.mock.calls.length).toBe(1);  
     });
     
     it('delete service object delete', async () => {
-      let instance = new Service(Logger, Node, Icinga, {
+      let instance = new Service(logger, node, icinga, {
         ClusterIP: {
           discover: true
         }
@@ -158,16 +163,13 @@ describe('kubernetes services', () => {
         object: fixture
       };
 
-      Icinga.applyHost = jest.fn();
-      Icinga.deleteServicesByFilter = function(definition) {
+      icinga.deleteServicesByFilter = function(definition) {
         expect(definition).toEqual('service.vars.kubernetes.metadata.uid==\"xyz\"');
         return new Promise((resolve,reject) => {
           resolve(true);
         });
       };
 
-
-      var bindings = {};
       var json = {
         on: function(name, callback) {
           bindings[name] = callback.bind(instance);
@@ -179,11 +181,11 @@ describe('kubernetes services', () => {
       });
 
       await bindings.data(resource);
-      expect(Icinga.applyHost.mock.calls.length).toBe(0);  
-      });
+      expect(icinga.applyHost.mock.calls.length).toBe(0);  
+    });
 
     it('skip headless service', async () => {
-      let instance = new Service(Logger, Node, Icinga, {
+      let instance = new Service(logger, node, icinga, {
         ClusterIP: {
           discover: true
         }
@@ -195,7 +197,6 @@ describe('kubernetes services', () => {
         object: fixture
       };
 
-      var bindings = {};
       var json = {
         on: function(name, callback) {
           bindings[name] = callback.bind(instance);
@@ -211,7 +212,7 @@ describe('kubernetes services', () => {
     });
 
     it('skip resource with invalid kind', async () => {
-      let instance = new Service(Logger, Node, Icinga, {
+      let instance = new Service(logger, node, icinga, {
         ClusterIP: {
           discover: true
         }
@@ -223,7 +224,6 @@ describe('kubernetes services', () => {
         object: fixture
       };
 
-      var bindings = {};
       var json = {
         on: function(name, callback) {
           bindings[name] = callback.bind(instance);
@@ -239,7 +239,7 @@ describe('kubernetes services', () => {
     });
     
     it('skip resource kube-icinga/discover===false', async () => {
-      let instance = new Service(Logger, Node, Icinga, {
+      let instance = new Service(logger, node, icinga, {
         ClusterIP: {
           discover: true
         }
@@ -251,7 +251,6 @@ describe('kubernetes services', () => {
         object: fixture
       };
 
-      var bindings = {};
       var json = {
         on: function(name, callback) {
           bindings[name] = callback.bind(instance);
@@ -269,15 +268,14 @@ describe('kubernetes services', () => {
 
   describe('add service object with dummy host', () => {
     it('create icinga host object', () => {
-      let instance = new Service(Logger, Node, Icinga, {
+      let instance = new Service(logger, node, icinga, {
         ClusterIP: {
           applyServices: false
         }
       });
 
-      Icinga.applyHost = jest.fn();
       instance.prepareObject(fixture);  
-      const call = Icinga.applyHost.mock.calls[0];
+      const call = icinga.applyHost.mock.calls[0];
       expect(call[0]).toBe('kubernetes-clusterip-services');
       expect(call[1].address).toBe('kubernetes-clusterip-services');
       expect(call[1].display_name).toBe('kubernetes-clusterip-services');
@@ -285,16 +283,15 @@ describe('kubernetes services', () => {
     });
     
     it('create dynamic icinga host object', () => {
-      let instance = new Service(Logger, Node, Icinga, {
+      let instance = new Service(logger, node, icinga, {
         ClusterIP: {
           hostName: null,
           applyServices: false
         }
       });
 
-      Icinga.applyHost = jest.fn();
       instance.prepareObject(fixture);  
-      const call = Icinga.applyHost.mock.calls[0];
+      const call = icinga.applyHost.mock.calls[0];
       expect(call[0]).toBe('service-foobar-foo');
       expect(call[1].address).toBe('10.99.24.32');
       expect(call[1].display_name).toBe('service-foobar-foo');
@@ -302,7 +299,7 @@ describe('kubernetes services', () => {
     });
     
     it('create icinga host object with custom definitions', () => {
-      let instance = new Service(Logger, Node, Icinga, {
+      let instance = new Service(logger, node, icinga, {
         ClusterIP: {
           applyServices: false,
           hostDefinition: {
@@ -312,77 +309,67 @@ describe('kubernetes services', () => {
         }
       });
       
-      Icinga.applyServiceGroup = jest.fn();
-      Icinga.applyHost = jest.fn();
       instance.prepareObject(fixture);  
-      const call = Icinga.applyHost.mock.calls[0];
+      const call = icinga.applyHost.mock.calls[0];
       expect(call[1]['vars.foo']).toBe('bar');
       expect(call[1]['vars.check_command']).toBe('foo');
     });
     
     it('create icinga host object with templates', () => {
-      let instance = new Service(Logger, Node, Icinga, {
+      let instance = new Service(logger, node, icinga, {
         ClusterIP: {
           applyServices: false,
           hostTemplates: ['foo', 'bar']
         }      
       });
 
-      Icinga.applyServiceGroup = jest.fn();
-      Icinga.applyHost = jest.fn();
       instance.prepareObject(fixture);  
-      const call = Icinga.applyHost.mock.calls[0];
+      const call = icinga.applyHost.mock.calls[0];
       expect(call[2]).toEqual(['foo', 'bar']);
     });
     
     it('do not create icinga host object while service is of type NodePort', () => {
-      let instance = new Service(Logger, Node, Icinga, {
+      let instance = new Service(logger, node, icinga, {
         NodePort: {
           applyServices: false
         }
       });
 
       fixture.spec.type = 'NodePort';
-      Icinga.applyHost = jest.fn();
       instance.prepareObject(fixture);  
-      expect(Icinga.applyHost.mock.instances.length).toBe(0);
+      expect(icinga.applyHost.mock.instances.length).toBe(0);
     });
   });
   
   describe('add service object namespace as service group', () => {
     it('create service group per default', async () => {
-      let instance = new Service(Logger, Node, Icinga);
+      let instance = new Service(logger, node, icinga);
 
-      Icinga.applyHost = jest.fn();
-      Icinga.hasCheckCommand = jest.fn();
-      Icinga.applyService = jest.fn();
-      Icinga.applyServiceGroup = jest.fn();
       await instance.prepareObject(fixture);  
-      const call = Icinga.applyServiceGroup.mock.calls[0];
+      const call = icinga.applyServiceGroup.mock.calls[0];
       expect(call[0]).toBe('foobar');
     });
     
     it('do not create servicegroup if applyServices is disabled', () => {
-      let instance = new Service(Logger, Node, Icinga, {
-        applyServices: false
+      let instance = new Service(logger, node, icinga, {
+        NodePort: {
+          applyServices: false
+        }
       });
 
       instance.prepareObject(fixture);  
-      Icinga.applyServiceGroup = jest.fn();
-      const call = Icinga.applyServiceGroup.mock.instances[0];
-      expect(Icinga.applyServiceGroup.mock.instances.length).toBe(0);
+      const call = icinga.applyServiceGroup.mock.instances[0];
+      expect(icinga.applyServiceGroup.mock.instances.length).toBe(0);
     });
   });
 
   describe('add all service object ports as service objects', () => {
     it('create all service objects', async () => {
-      let instance = new Service(Logger, Node, Icinga);
+      let instance = new Service(logger, node, icinga);
 
-      Icinga.applyService = jest.fn();
-      Icinga.applyServiceGroup = jest.fn();
       await instance.prepareObject(fixture);  
-      const calls = Icinga.applyService.mock.calls;
-      expect(Icinga.applyService.mock.instances.length).toBe(2);
+      const calls = icinga.applyService.mock.calls;
+      expect(icinga.applyService.mock.instances.length).toBe(2);
       expect(calls[0][0]).toBe('kubernetes-clusterip-services');
       expect(calls[1][0]).toBe('kubernetes-clusterip-services');
       expect(calls[0][1]).toBe('foobar-foo-http');
@@ -397,23 +384,21 @@ describe('kubernetes services', () => {
     });
     
     it('create all service objects with dynamic hosts', async () => {
-      let instance = new Service(Logger, Node, Icinga, {
+      let instance = new Service(logger, node, icinga, {
         ClusterIP: {
           hostName: null 
         }
       });
 
-      Icinga.applyService = jest.fn();
-      Icinga.applyServiceGroup = jest.fn();
       await instance.prepareObject(fixture);  
-      const calls = Icinga.applyService.mock.calls;
-      expect(Icinga.applyService.mock.instances.length).toBe(2);
+      const calls = icinga.applyService.mock.calls;
+      expect(icinga.applyService.mock.instances.length).toBe(2);
       expect(calls[0][0]).toBe('service-foobar-foo');
       expect(calls[1][0]).toBe('service-foobar-foo');
     });
 
     it('create all service objects with custom service definition', async () => {
-      let instance = new Service(Logger, Node, Icinga, {
+      let instance = new Service(logger, node, icinga, {
         ClusterIP: {
           applyServices: true,
           serviceDefinition: {
@@ -423,15 +408,11 @@ describe('kubernetes services', () => {
         } 
       });
 
-      Icinga.applyHost = jest.fn();
-      Icinga.applyService = jest.fn();
-      Icinga.applyServiceGroup = jest.fn();
-      Icinga.hasCheckCommand = jest.fn();
-      Icinga.hasCheckCommand.mockResolvedValue(true);
+      icinga.hasCheckCommand.mockResolvedValue(true);
 
       await instance.prepareObject(fixture);  
-      const calls = Icinga.applyService.mock.calls;
-      expect(Icinga.applyService.mock.instances.length).toBe(2);
+      const calls = icinga.applyService.mock.calls;
+      expect(icinga.applyService.mock.instances.length).toBe(2);
       expect(calls[0][2].check_command).toBe('http');
       expect(calls[0][2]['vars.http_address']).toBe('10.99.24.32');
       expect(calls[0][2]['vars.http_port']).toBe(80);
@@ -443,7 +424,7 @@ describe('kubernetes services', () => {
     });
 
     it('create all service objects with custom service definition, check_command not found, fallback to protocol', async () => {
-      let instance = new Service(Logger, Node, Icinga, {
+      let instance = new Service(logger, node, icinga, {
         ClusterIP: {
           applyServices: true,
           serviceDefinition: {
@@ -453,15 +434,11 @@ describe('kubernetes services', () => {
         } 
       });
 
-      Icinga.applyHost = jest.fn();
-      Icinga.applyService = jest.fn();
-      Icinga.applyServiceGroup = jest.fn();
-      Icinga.hasCheckCommand = jest.fn();
-      Icinga.hasCheckCommand.mockResolvedValue(false);
+      icinga.hasCheckCommand.mockResolvedValue(false);
 
       await instance.prepareObject(fixture);  
-      const calls = Icinga.applyService.mock.calls;
-      expect(Icinga.applyService.mock.instances.length).toBe(2);
+      const calls = icinga.applyService.mock.calls;
+      expect(icinga.applyService.mock.instances.length).toBe(2);
       expect(calls[0][2].check_command).toBe('tcp');
       expect(calls[0][2]['vars.foo']).toBe('bar');
       expect(calls[1][2].check_command).toBe('tcp');
@@ -469,38 +446,33 @@ describe('kubernetes services', () => {
     });
 
     it('create all service objects with templates', async () => {
-      let instance = new Service(Logger, Node, Icinga, {
+      let instance = new Service(logger, node, icinga, {
         ClusterIP: {
           applyServices: true,
           serviceTemplates: ['foo', 'bar']
         }    
       });
 
-      Icinga.applyServiceGroup = jest.fn();
-      Icinga.applyService = jest.fn();
       await instance.prepareObject(fixture);  
-      const calls = Icinga.applyService.mock.calls;
-      expect(Icinga.applyService.mock.instances.length).toBe(2);
+      const calls = icinga.applyService.mock.calls;
+      expect(icinga.applyService.mock.instances.length).toBe(2);
       expect(calls[0][3]).toEqual(['foo', 'bar']);
       expect(calls[1][3]).toEqual(['foo', 'bar']);
     });
     
     it('create NodePort service objects', async () => {
-      let instance = new Service(Logger, Node, Icinga);
+      let instance = new Service(logger, node, icinga);
 
-      Node.getWorkerNodes = function() {
+      node.getWorkerNodes = function() {
         return ['foo', 'bar'];
       };
 
-      Icinga.applyService = jest.fn();
-      Icinga.applyServiceGroup = jest.fn();
       fixture.spec.type = 'NodePort'
-      Icinga.applyHost = jest.fn();
 
       await instance.prepareObject(fixture);  
-      const calls = Icinga.applyService.mock.calls;
-      expect(Icinga.applyHost.mock.instances.length).toBe(0);
-      expect(Icinga.applyService.mock.instances.length).toBe(4);
+      const calls = icinga.applyService.mock.calls;
+      expect(icinga.applyHost.mock.instances.length).toBe(0);
+      expect(icinga.applyService.mock.instances.length).toBe(4);
 
       expect(calls[0][0]).toBe('foo');
       expect(calls[1][0]).toBe('bar');
@@ -528,7 +500,7 @@ describe('kubernetes services', () => {
 
   describe('kubernetes annotations', () => {
     it('check_command/templates annotation', async () => {
-      let instance = new Service(Logger, Node, Icinga, {
+      let instance = new Service(logger, node, icinga, {
         ClusterIP: {
           applyServices: true
         }  
@@ -536,15 +508,11 @@ describe('kubernetes services', () => {
 
       fixture.metadata.annotations['kube-icinga/check_command'] = 'bar';
       fixture.metadata.annotations['kube-icinga/templates'] = 'foobar,barfoo';
-      Icinga.applyService = jest.fn();
-      Icinga.hasCheckCommand = jest.fn();
-      Icinga.hasCheckCommand.mockResolvedValue(true);
-      Icinga.applyHost = jest.fn();
-      Icinga.applyServiceGroup = jest.fn();
+      icinga.hasCheckCommand.mockResolvedValue(true);
 
       await instance.prepareObject(fixture);
-      const calls = Icinga.applyService.mock.calls;
-      expect(Icinga.applyService.mock.instances.length).toBe(2);
+      const calls = icinga.applyService.mock.calls;
+      expect(icinga.applyService.mock.instances.length).toBe(2);
       expect(calls[0][2].check_command).toBe('bar');
       expect(calls[1][2].check_command).toBe('bar');
       expect(calls[0][2]['vars.bar_address']).toBe('10.99.24.32');
@@ -556,7 +524,7 @@ describe('kubernetes services', () => {
     });
     
     it('use annotation instead global definition', async () => {
-      let instance = new Service(Logger, Node, Icinga, {
+      let instance = new Service(logger, node, icinga, {
         ClusterIP: {
           applyServices: true,
           serviceDefinition: {
@@ -566,20 +534,17 @@ describe('kubernetes services', () => {
       });
       fixture.metadata.annotations['kube-icinga/check_command'] = 'bar';
 
-      Icinga.applyServiceGroup = jest.fn();
-      Icinga.applyService = jest.fn();
-      Icinga.hasCheckCommand = jest.fn();
-      Icinga.hasCheckCommand.mockResolvedValue(true);
+      icinga.hasCheckCommand.mockResolvedValue(true);
 
       await instance.prepareObject(fixture);
-      const calls = Icinga.applyService.mock.calls;
-      expect(Icinga.applyService.mock.instances.length).toBe(2);
+      const calls = icinga.applyService.mock.calls;
+      expect(icinga.applyService.mock.instances.length).toBe(2);
       expect(calls[0][2].check_command).toBe('bar');
       expect(calls[1][2].check_command).toBe('bar');
     });
 
     it('definiton merge', async () => {
-      let instance = new Service(Logger, Node, Icinga, {
+      let instance = new Service(logger, node, icinga, {
         ClusterIP: {
           applyServices: true,
           serviceDefinition: {
@@ -589,14 +554,11 @@ describe('kubernetes services', () => {
       });
       fixture.metadata.annotations['kube-icinga/definition'] = '{"vars.foo": "foobar"}';
 
-      Icinga.applyServiceGroup = jest.fn();
-      Icinga.applyService = jest.fn();
-      Icinga.hasCheckCommand = jest.fn();
-      Icinga.hasCheckCommand.mockResolvedValue(true);
+      icinga.hasCheckCommand.mockResolvedValue(true);
 
       await instance.prepareObject(fixture);
-      const calls = Icinga.applyService.mock.calls;
-      expect(Icinga.applyService.mock.instances.length).toBe(2);
+      const calls = icinga.applyService.mock.calls;
+      expect(icinga.applyService.mock.instances.length).toBe(2);
       expect(calls[0][2]["check_command"]).toBe('foo');
       expect(calls[0][2]["vars.foo"]).toBe('foobar');
     });

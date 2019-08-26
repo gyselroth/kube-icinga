@@ -42,6 +42,7 @@ describe('icinga', () => {
       const calls = IcingaApi.getCheckCommand.mock.calls;
       expect(calls.length).toBe(1);
       expect(calls[0][0]).toBe('foobar');
+    });    
   });
 
   describe('apply host group', () => {

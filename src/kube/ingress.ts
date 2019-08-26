@@ -36,7 +36,7 @@ export default class Ingress extends Resource {
   /**
    * kubernetes hosts
    */
-  constructor(logger: Logger, kubeNode: KubeNode, icinga: Icinga, options: IngressOptions) {
+  constructor(logger: Logger, kubeNode: KubeNode, icinga: Icinga, options: IngressOptions = {}) {
     super();
     this.logger = logger;
     this.icinga = icinga;

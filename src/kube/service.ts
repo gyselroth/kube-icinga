@@ -116,7 +116,7 @@ export default class Service extends Resource {
    */
   public async prepareObject(definition): Promise<any> {
     let serviceType = definition.spec.type;
-
+    
     if (!this.options[serviceType]) {
       throw new Error('unknown service type provided');
     }

@@ -1,11 +1,12 @@
 ## 2.1.0
 **Maintainer**: Raffael Sahli <sahli@gyselroth.com>\
-**Date**: Tue Mar 19 2019 16:01:20 CET 2019
+**Date**: 
 
 * [FEATURE] Change servicegroup definition #17
 * [FEATURE] Enable provisioning on a resource basis #14
 * [CHANGE] Added more unit tests
-* [CHANGE] Headless services are ignored
+* [CHANGE] Headless service monitoring #18
+* [CHANGE] Upgrade to typescript 3.x / jest 24.x #22
 
 
 ## 2.0.1

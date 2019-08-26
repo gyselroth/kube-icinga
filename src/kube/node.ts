@@ -23,7 +23,7 @@ export default class Node extends Resource {
   /**
    * kubernetes hosts
    */
-  constructor(logger: Logger, icinga: Icinga, options: NodeOptions) {
+  constructor(logger: Logger, icinga: Icinga, options: NodeOptions = {}) {
     super();
     this.logger = logger;
     this.icinga = icinga;

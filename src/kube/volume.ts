@@ -36,7 +36,7 @@ export default class Volume extends Resource {
   /**
    * kubernetes hosts
    */
-  constructor(logger: Logger, kubeNode: KubeNode, icinga: Icinga, options: VolumeOptions) {
+  constructor(logger: Logger, kubeNode: KubeNode, icinga: Icinga, options: VolumeOptions = {}) {
     super();
     this.logger = logger;
     this.icinga = icinga;
