@@ -528,7 +528,44 @@ describe('kubernetes services', () => {
       expect(calls[3][2]['check_command']).toBe('tcp');
       expect(calls[3][2]['vars.tcp_address']).toBe(undefined);
       expect(calls[3][2]['vars.tcp_port']).toBe(10000);
-    }); 
+    });
+
+    it('create LoadBalancer service objects with loadBalancerIP', async () => {
+      let instance = new Service(logger, node, icinga);
+      fixture.spec.type = 'LoadBalancer';
+      fixture.spec.loadBalancerIP = '10.10.10.10';
+      fixture.spec.ports[0].nodePort = 100;
+      fixture.spec.ports[1].nodePort = 100;
+
+      await instance.prepareObject(fixture);  
+      const calls = icinga.applyService.mock.calls;
+      expect(icinga.applyService.mock.instances.length).toBe(2);
+
+      expect(calls[0][2]['check_command']).toBe('tcp');
+      expect(calls[0][2]['vars.tcp_address']).toBe('10.10.10.10');
+      expect(calls[0][2]['vars.tcp_port']).toBe(80);
+      expect(calls[1][2]['check_command']).toBe('tcp');
+      expect(calls[1][2]['vars.tcp_address']).toBe('10.10.10.10');
+      expect(calls[1][2]['vars.tcp_port']).toBe(10000);
+    });
+    
+    it('create LoadBalancer service objects', async () => {
+      let instance = new Service(logger, node, icinga);
+      fixture.spec.type = 'LoadBalancer';
+      fixture.spec.ports[0].nodePort = 100;
+      fixture.spec.ports[1].nodePort = 100;
+
+      await instance.prepareObject(fixture);  
+      const calls = icinga.applyService.mock.calls;
+      expect(icinga.applyService.mock.instances.length).toBe(2);
+
+      expect(calls[0][2]['check_command']).toBe('tcp');
+      expect(calls[0][2]['vars.tcp_address']).toBe('10.99.24.32');
+      expect(calls[0][2]['vars.tcp_port']).toBe(80);
+      expect(calls[1][2]['check_command']).toBe('tcp');
+      expect(calls[1][2]['vars.tcp_address']).toBe('10.99.24.32');
+      expect(calls[1][2]['vars.tcp_port']).toBe(10000);
+    });
   });
 
   describe('kubernetes annotations', () => {

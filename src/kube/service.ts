@@ -136,7 +136,7 @@ export default class Service extends Resource {
     templates = templates.concat(this.prepareTemplates(definition));
 
     if (serviceType !== TYPE_NODEPORT) {
-      let address = options.hostName || definition.spec.clusterIP;
+      let address = options.hostName || definition.spec.loadBalancerIP || definition.spec.clusterIP;
       await this.applyHost(hostname, address, serviceType, definition, options.hostTemplates);
     }
 
@@ -171,10 +171,14 @@ export default class Service extends Resource {
           port.check_command = protocol;
 
           if (serviceType !== TYPE_NODEPORT) {
-            port['vars.'+protocol+'_address'] = definition.spec.clusterIP;
+            port['vars.'+protocol+'_address'] = definition.spec.loadBalancerIP || definition.spec.clusterIP;
           }
 
-          port['vars.'+protocol+'_port'] = servicePort.nodePort || servicePort.port;
+          if(serviceType === TYPE_LOADBALANCER) {
+            port['vars.'+protocol+'_port'] = servicePort.port || servicePort.nodePort;
+          } else {
+            port['vars.'+protocol+'_port'] = servicePort.nodePort || servicePort.port;
+          }    
         }
 
         port['vars._kubernetes'] = true;
