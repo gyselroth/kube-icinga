@@ -4,10 +4,15 @@
     "module": "commonjs",
     "outDir": "build",
     "sourceMap": true,
-    "experimentalDecorators": true
-  },
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitReturns": true,
+    "strict": true,
+    "noUnusedLocals": true
+  },  
   "include": [
     "src/**/*.ts",
+    "index.d.ts"
   ],
   "exclude": [
     "node_modules"

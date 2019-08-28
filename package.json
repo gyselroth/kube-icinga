@@ -27,9 +27,11 @@
   },
   "homepage": "https://github.com/raffis/kube-icinga#readme",
   "dependencies": {
+    "@types/jsonstream": "^0.8.30",
     "icinga2-api": "github:raffis/nodejs-icinga2api",
     "json-stream": "^1.0.0",
     "kubernetes-client": "^5.4.0",
+    "kubernetes-types": "^1.13.0-beta.1",
     "winston": "^3.0.0"
   },
   "devDependencies": {

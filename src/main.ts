@@ -1,7 +1,7 @@
 import logger from './logger';
-import kubeClient from './client/kube';
+import {kubeClient} from './client/kube';
 import icingaClient from './client/icinga';
-import IcingaWrapper from './icinga';
+import {Icinga} from './icinga';
 import config from './config';
 import Node from './kube/node';
 import Service from './kube/service';
@@ -9,16 +9,13 @@ import Ingress from './kube/ingress';
 import Volume from './kube/volume';
 import * as JSONStream from 'json-stream';
 
-const icinga = new IcingaWrapper(logger, icingaClient);
+const icinga = new Icinga(logger, icingaClient);
 const kubeNode = new Node(logger, icinga, config.kubernetes.nodes);
 const kubeIngress = new Ingress(logger, kubeNode, icinga, config.kubernetes.ingresses);
 const kubeService = new Service(logger, kubeNode, icinga, config.kubernetes.services);
 const kubeVolume = new Volume(logger, kubeNode, icinga, config.kubernetes.volumes);
 
-/**
- * Main
- */
-async function main() {
+(async function main() {
   if (config.cleanup) {
     logger.info('cleanup all kube icinga objects (vars._kubernetes == true)');
 
@@ -32,7 +29,7 @@ async function main() {
   }
 
   if (config.kubernetes.nodes.discover) {
-    kubeNode.kubeListener(function() {
+    kubeNode.kubeListener(() => {
       let json = new JSONStream();
       let stream = kubeClient.apis.v1.watch.nodes.getStream();
       stream.pipe(json);
@@ -68,6 +65,4 @@ async function main() {
       return json;
     });
   }
-}
-
-main();
+})();

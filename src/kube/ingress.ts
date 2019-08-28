@@ -1,43 +1,47 @@
 import {Logger} from 'winston';
-import Icinga from '../icinga';
+import {Icinga, IcingaObject} from '../icinga';
 import KubeNode from './node';
-import Resource from './abstract.resource';
+import {default as AbstractResource} from './abstract.resource';
+import {providerStream} from '../client/kube';
+import {Ingress as KubeIngress, HTTPIngressRuleValue} from 'kubernetes-types/extensions/v1beta1';
 
 interface IngressOptions {
-  discover?: boolean;
-  hostName?: string;
-  applyServices?: boolean;
-  attachToNodes?: boolean;
-  hostDefinition?: object;
-  serviceDefinition?: object;
-  serviceGroupDefinition?: object;
-  hostTemplates?: string[];
-  serviceTemplates?: string[];
+  discover: boolean;
+  hostName: string;
+  applyServices: boolean;
+  attachToNodes: boolean;
+  hostDefinition: object;
+  serviceDefinition: object;
+  serviceGroupDefinition: object;
+  hostTemplates: string[];
+  serviceTemplates: string[];
 }
+
+const DefaultOptions: IngressOptions = {
+  discover: true,
+  applyServices: true,
+  hostName: 'kubernetes-ingresses',
+  attachToNodes: false,
+  hostDefinition: {},
+  serviceDefinition: {},
+  serviceGroupDefinition: {},
+  hostTemplates: [],
+  serviceTemplates: [],
+};
 
 /**
  * kubernetes ingresses
  */
-export default class Ingress extends Resource {
+export default class Ingress extends AbstractResource {
   protected icinga: Icinga;
   protected kubeNode: KubeNode;
-  protected options = {
-    discover: true,
-    applyServices: true,
-    hostName: 'kubernetes-ingresses',
-    attachToNodes: false,
-    hostDefinition: {},
-    serviceDefinition: {},
-    serviceGroupDefinition: {},
-    hostTemplates: [],
-    serviceTemplates: [],
-  };
+  protected options = DefaultOptions;
 
   /**
    * kubernetes hosts
    */
-  constructor(logger: Logger, kubeNode: KubeNode, icinga: Icinga, options: IngressOptions = {}) {
-    super();
+  constructor(logger: Logger, kubeNode: KubeNode, icinga: Icinga, options: IngressOptions = DefaultOptions) {
+    super(logger);
     this.logger = logger;
     this.icinga = icinga;
     this.kubeNode = kubeNode;
@@ -47,8 +51,8 @@ export default class Ingress extends Resource {
   /**
    * Apply host
    */
-  protected async applyHost(name: string, address: string, metadata, templates: string[]): Promise<boolean> {
-    let definition = {
+  protected async applyHost(name: string, address: string, metadata: KubeIngress, templates: string[]): Promise<boolean> {
+    let definition: IcingaObject = {
       'display_name': name,
       'address': address,
       'check_command': 'dummy',
@@ -64,7 +68,7 @@ export default class Ingress extends Resource {
   /**
    * Apply service
    */
-  protected async applyService(host: string, name: string, definition, templates: string[]) {
+  protected async applyService(host: string, name: string, definition: any, templates: string[]) {
     if (this.options.attachToNodes) {
       for (const node of this.kubeNode.getWorkerNodes()) {
         definition.host_name = node;
@@ -79,34 +83,39 @@ export default class Ingress extends Resource {
   /**
    * Preapre icinga object and apply
    */
-  public async prepareObject(definition: any): Promise<any> {
+  public async prepareObject(definition: KubeIngress): Promise<any> {
     let hostname = this.getHostname(definition);
 
     if (!this.options.attachToNodes) {
       await this.applyHost(hostname, hostname, definition, this.options.hostTemplates);
     }
+
     let service = this.prepareResource(definition);
     let templates = this.options.serviceTemplates;
     templates = templates.concat(this.prepareTemplates(definition));
 
     if (this.options.applyServices) {
-      await this.icinga.applyServiceGroup(definition.metadata.namespace, Object.assign({'vars._kubernetes': true}, this.options.serviceGroupDefinition));
+      let groups = [];
+      if (definition.metadata && definition.metadata.namespace) {
+        groups.push(definition.metadata.namespace);
+        await this.icinga.applyServiceGroup(definition.metadata.namespace, Object.assign({'vars._kubernetes': true}, this.options.serviceGroupDefinition));
+      }
 
-      for (const spec of definition.spec.rules) {
-        for (const path of spec.http.paths) {
+      for (const spec of ((definition.spec || {}).rules || [])) {
+        for (const path of ((spec.http || {} as HTTPIngressRuleValue).paths || [])) {
           let base = path.path || '/';
           let name = this.escapeName([spec.host, 'http', base].join('-'));
-          let addition = {
+          let addition: IcingaObject = {
             'check_command': 'http',
             'display_name': `${spec.host}${base}:http`,
             'vars._kubernetes': true,
-            'vars._kubernetes_uid': definition.metadata.uid,
+            'vars._kubernetes_uid': (definition.metadata || {}).uid || null,
             'vars.kubernetes': definition,
             'vars.http_address': spec.host,
             'vars.http_vhost': spec.host,
             'vars.http_path': base,
             'vars.http_ignore_body': true,
-            'groups': [definition.metadata.namespace],
+            'groups': groups,
           };
 
           Object.assign(addition, this.options.serviceDefinition);
@@ -114,7 +123,7 @@ export default class Ingress extends Resource {
           this.applyService(hostname, name, addition, templates);
 
           // tls secret set, also apply https service
-          if (definition.spec.tls) {
+          if ((definition.spec || {}).tls || false) {
             name = this.escapeName([spec.host, 'https', base].join('-'));
             addition.display_name += 's';
             addition['vars.http_ssl'] = true;
@@ -128,11 +137,11 @@ export default class Ingress extends Resource {
   /**
    * Get hostname
    */
-  protected getHostname(definition: any): string {
-    if (definition.metadata.annotations['kube-icinga/host']) {
-      return definition.metadata.annotations['kube-icinga/host'];
+  protected getHostname(definition: KubeIngress): string {
+    if (definition.metadata!.annotations!['kube-icinga/host']) {
+      return definition.metadata!.annotations!['kube-icinga/host'];
     } else if (this.options.hostName === null) {
-      return this.escapeName(['ingress', definition.metadata.namespace, definition.metadata.name].join('-'));
+      return this.escapeName(['ingress', definition.metadata!.namespace, definition.metadata!.name].join('-'));
     }
 
     return this.options.hostName;
@@ -141,22 +150,22 @@ export default class Ingress extends Resource {
   /**
    * Delete object
    */
-  protected deleteObject(definition: any): Promise<boolean> {
+  protected deleteObject(definition: KubeIngress): Promise<boolean> {
     if (this.options.hostName === null) {
       let hostname = this.getHostname(definition);
       return this.icinga.deleteHost(hostname);
     }
 
-    return this.icinga.deleteServicesByFilter('service.vars.kubernetes.metadata.uid=="'+definition.metadata.uid+'"');
+    return this.icinga.deleteServicesByFilter('service.vars.kubernetes.metadata.uid=="'+definition.metadata!.uid+'"');
   }
 
   /**
    * Start kube listener
    */
-  public async kubeListener(provider) {
+  public async kubeListener(provider: providerStream) {
     try {
       let stream = provider();
-      stream.on('data', async (object) => {
+      stream.on('data', async (object: any) => {
         this.logger.debug('received kubernetes ingress resource', {object});
         return this.handleResource('Ingress', object, this.options);
       });

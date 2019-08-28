@@ -1,12 +1,19 @@
 import {Logger} from 'winston';
-import Icinga from '../icinga';
+import {Icinga, IcingaObject} from '../icinga';
 import Resource from './abstract.resource';
+import {providerStream} from '../client/kube';
 
 interface NodeOptions {
-  discover?: boolean;
-  hostDefinition?: object;
-  hostTemplates?: string[];
+  discover: boolean;
+  hostDefinition: object;
+  hostTemplates: string[];
 }
+
+const DefaultOptions: NodeOptions = {
+  discover: true,
+  hostDefinition: {},
+  hostTemplates: [],
+};
 
 /**
  * kubernetes hosts
@@ -14,18 +21,13 @@ interface NodeOptions {
 export default class Node extends Resource {
   protected icinga: Icinga;
   protected nodes: string[] = [];
-  protected options: NodeOptions = {
-    discover: true,
-    hostDefinition: {},
-    hostTemplates: [],
-  };
+  protected options = DefaultOptions;
 
   /**
    * kubernetes hosts
    */
-  constructor(logger: Logger, icinga: Icinga, options: NodeOptions = {}) {
-    super();
-    this.logger = logger;
+  constructor(logger: Logger, icinga: Icinga, options: NodeOptions = DefaultOptions) {
+    super(logger);
     this.icinga = icinga;
     this.options = Object.assign(this.options, options);
   }
@@ -34,7 +36,7 @@ export default class Node extends Resource {
    * Preapre icinga object and apply
    */
   public async prepareObject(definition: any): Promise<boolean> {
-    let host = {
+    let host: IcingaObject = {
       'display_name': definition.metadata.name,
       'address': definition.metadata.name,
       'vars._kubernetes': true,
@@ -68,10 +70,10 @@ export default class Node extends Resource {
   /**
    * Start kube listener
    */
-  public async kubeListener(provider) {
+  public async kubeListener(provider: providerStream) {
     try {
       let stream = provider();
-      stream.on('data', async (object) => {
+      stream.on('data', async (object: any) => {
         // ignore MODIFIER for kube nodes
         if (object.type === 'MODIFIED') {
           return false;

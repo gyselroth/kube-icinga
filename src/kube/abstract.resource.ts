@@ -1,10 +1,15 @@
 import {Logger} from 'winston';
+import {Service as KubeService} from 'kubernetes-types/core/v1';
 
 /**
  * kubernetes hosts
  */
 export default abstract class Resource {
   protected logger: Logger;
+
+  constructor(logger: Logger) {
+    this.logger = logger;
+  }
 
   /**
    * Replace invalid icinga2 chars
@@ -23,7 +28,7 @@ export default abstract class Resource {
       return definition;
     }
 
-    let annotations: any = resource.metadata.annotations;
+    let annotations = resource.metadata.annotations;
 
     if (annotations['kube-icinga/check_command']) {
       definition.check_command = annotations['kube-icinga/check_command'];
@@ -54,19 +59,30 @@ export default abstract class Resource {
   }
 
   /**
+   * Get annotations
+   */
+  protected getAnnotations(definition: KubeService): { [key: string]: string } {
+    if (definition.metadata && definition.metadata.annotations) {
+      return definition.metadata.annotations;
+    }
+
+    return {};
+  }
+
+  /**
    * Delete object
    */
-  protected abstract deleteObject(object): Promise<boolean>;
+  protected abstract deleteObject(object: any): Promise<boolean>;
 
   /**
    * Prepare object
    */
-  protected abstract prepareObject(object): Promise<any>;
+  protected abstract prepareObject(object: any): Promise<any>;
 
   /**
    * Check if we can continue with a given resource
    */
-  protected async handleResource(kind: string, object, options): Promise<boolean> {
+  protected async handleResource(kind: string, object: any, options: any): Promise<boolean> {
     if (object.object.kind !== kind) {
       this.logger.error('skip invalid '+kind+' object', {object: object});
       return false;

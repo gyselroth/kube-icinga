@@ -1,43 +1,47 @@
 import {Logger} from 'winston';
-import Icinga from '../icinga';
+import {Icinga, IcingaObject} from '../icinga';
 import KubeNode from './node';
-import Resource from './abstract.resource';
+import {default as AbstractResource} from './abstract.resource';
+import {providerStream} from '../client/kube';
+import {PersistentVolume} from 'kubernetes-types/core/v1';
 
 interface VolumeOptions {
-  discover?: boolean;
-  applyServices?: boolean;
-  attachToNodes?: boolean;
-  hostName?: string;
-  hostDefinition?: object;
-  serviceDefinition?: object;
-  serviceGroupDefinition?: object;
-  hostTemplates?: string[];
-  serviceTemplates?: string[];
+  discover: boolean;
+  applyServices: boolean;
+  attachToNodes: boolean;
+  hostName: string;
+  hostDefinition: object;
+  serviceDefinition: object;
+  serviceGroupDefinition: object;
+  hostTemplates: string[];
+  serviceTemplates: string[];
 }
+
+const DefaultOptions: VolumeOptions = {
+  discover: true,
+  applyServices: true,
+  attachToNodes: false,
+  hostName: 'kubernetes-volumes',
+  hostDefinition: {},
+  serviceDefinition: {},
+  serviceGroupDefinition: {},
+  hostTemplates: [],
+  serviceTemplates: [],
+};
 
 /**
  * kubernetes ingresses
  */
-export default class Volume extends Resource {
+export default class Volume extends AbstractResource {
   protected icinga: Icinga;
   protected kubeNode: KubeNode;
-  protected options = {
-    discover: true,
-    applyServices: true,
-    attachToNodes: false,
-    hostName: 'kubernetes-volumes',
-    hostDefinition: {},
-    serviceDefinition: {},
-    serviceGroupDefinition: {},
-    hostTemplates: [],
-    serviceTemplates: [],
-  };
+  protected options = DefaultOptions;
 
   /**
    * kubernetes hosts
    */
-  constructor(logger: Logger, kubeNode: KubeNode, icinga: Icinga, options: VolumeOptions = {}) {
-    super();
+  constructor(logger: Logger, kubeNode: KubeNode, icinga: Icinga, options: VolumeOptions = DefaultOptions) {
+    super(logger);
     this.logger = logger;
     this.icinga = icinga;
     this.kubeNode = kubeNode;
@@ -47,8 +51,8 @@ export default class Volume extends Resource {
   /**
    * Apply host
    */
-  protected async applyHost(name: string, address: string, metadata, templates: string[]): Promise<boolean> {
-    let definition = {
+  protected async applyHost(name: string, address: string, metadata: PersistentVolume, templates: string[]): Promise<boolean> {
+    let definition: IcingaObject = {
       'display_name': name,
       'address': address,
       'check_command': 'dummy',
@@ -64,7 +68,7 @@ export default class Volume extends Resource {
   /**
    * Apply service
    */
-  protected async applyService(host: string, name: string, definition, templates: string[]) {
+  protected async applyService(host: string, name: string, definition: any, templates: string[]) {
     if (this.options.attachToNodes) {
       for (const node of this.kubeNode.getWorkerNodes()) {
         definition.host_name = node;
@@ -79,19 +83,23 @@ export default class Volume extends Resource {
   /**
    * Preapre icinga object and apply
    */
-  public async prepareObject(definition: any): Promise<any> {
+  public async prepareObject(definition: PersistentVolume): Promise<any> {
     let hostname = this.getHostname(definition);
 
     if (!this.options.attachToNodes) {
       await this.applyHost(hostname, hostname, definition, this.options.hostTemplates);
     }
 
+    if (!definition.metadata || !definition.metadata.name) {
+      throw new Error('resource name in metadata is required');
+    }
+
     if (this.options.applyServices) {
       let groups = [];
 
-      if (definition.spec.claimRef.namespace) {
-        groups.push(definition.spec.claimRef.namespace);
-        await this.icinga.applyServiceGroup(definition.spec.claimRef.namespace, Object.assign({'vars._kubernetes': true}, this.options.serviceGroupDefinition));
+      if (definition.spec!.claimRef!.namespace) {
+        groups.push(definition.spec!.claimRef!.namespace);
+        await this.icinga.applyServiceGroup(definition.spec!.claimRef!.namespace, Object.assign({'vars._kubernetes': true}, this.options.serviceGroupDefinition));
       }
 
       let templates = this.options.serviceTemplates;
@@ -116,11 +124,11 @@ export default class Volume extends Resource {
   /**
    * Get hostname
    */
-  protected getHostname(definition: any): string {
-    if (definition.metadata.annotations['kube-icinga/host']) {
-      return definition.metadata.annotations['kube-icinga/host'];
+  protected getHostname(definition: PersistentVolume): string {
+    if (definition.metadata!.annotations!['kube-icinga/host']) {
+      return definition.metadata!.annotations!['kube-icinga/host'];
     } else if (this.options.hostName === null) {
-      return this.escapeName(['volume', definition.metadata.name].join('-'));
+      return this.escapeName(['volume', definition.metadata!.name].join('-'));
     }
 
     return this.options.hostName;
@@ -129,22 +137,22 @@ export default class Volume extends Resource {
   /**
    * Delete object
    */
-  protected deleteObject(definition: any): Promise<boolean> {
+  protected deleteObject(definition: PersistentVolume): Promise<boolean> {
     if (this.options.hostName === null) {
       let hostname = this.getHostname(definition);
       return this.icinga.deleteHost(hostname);
     }
 
-    return this.icinga.deleteServicesByFilter('service.vars.kubernetes.metadata.uid=="'+definition.metadata.uid+'"');
+    return this.icinga.deleteServicesByFilter('service.vars.kubernetes.metadata.uid=="'+definition.metadata!.uid+'"');
   }
 
   /**
    * Start kube listener
    */
-  public async kubeListener(provider) {
+  public async kubeListener(provider: providerStream) {
     try {
       let stream = provider();
-      stream.on('data', async (object) => {
+      stream.on('data', async (object: any) => {
         this.logger.debug('received kubernetes persistent volume resource', {object});
         return this.handleResource('PersistentVolume', object, this.options);
       });

@@ -10,9 +10,9 @@ try {
 /**
  * Decode json
  */
-function jsonParse(name: string, value) {
+function jsonParse(name: string, value: any): any {
   if (process.env[name]) {
-    return JSON.parse(process.env[name]);
+    return JSON.parse(process.env[name] || '');
   }
 
   return value;
@@ -21,9 +21,9 @@ function jsonParse(name: string, value) {
 /**
  * Comma separated string to array
  */
-function split(name: string, value) {
+function split(name: string, value: any): any {
   if (process.env[name]) {
-    return process.env[name].split(',');
+    return (process.env[name] || '').split(',');
   }
 
   return value;
@@ -32,7 +32,7 @@ function split(name: string, value) {
 /**
  * Parse env string
  */
-function stringParse(name: string, value) {
+function stringParse(name: string, value: any): any {
   if (process.env[name]) {
     if (process.env[name] == '') {
       return null;
