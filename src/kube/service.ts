@@ -72,12 +72,12 @@ const HEADLESS_ADDRESS = 'None';
 export default class Service extends AbstractResource {
   protected icinga: Icinga;
   protected kubeNode: KubeNode;
-  protected options = DefaultOptions;
+  protected options: ServiceOptions = DefaultOptions;
 
   /**
    * kubernetes services
    */
-  constructor(logger: Logger, kubeNode: KubeNode, icinga: Icinga, options: ServiceOptions=DefaultOptions) {
+  constructor(logger: Logger, kubeNode: KubeNode, icinga: Icinga, options: any =DefaultOptions) {
     super(logger);
     this.icinga = icinga;
     let clone = JSON.parse(JSON.stringify(DefaultOptions));
@@ -289,7 +289,7 @@ export default class Service extends AbstractResource {
       stream.on('data', async (object: any) => {
         this.logger.debug('received kubernetes service resource', {object});
 
-        if (this.getServiceAddress(object.obect) === HEADLESS_ADDRESS) {
+        if (this.getServiceAddress(object.object) === HEADLESS_ADDRESS) {
           this.logger.info('skip headless service object (use pod provisioning instead)', {object: object});
           return false;
         }

@@ -1,10 +1,10 @@
 import Node from '../../src/kube/node'; 
 import Logger from '../../src/logger'; 
+import {Logger as LoggerInterface} from 'winston';
 
 jest.mock('../../src/logger');
-var Icinga = (jest.genMockFromModule('../../src/icinga') as any).default;
+var Icinga = (jest.genMockFromModule('../../src/icinga') as any).Icinga;
 import * as JSONStream from 'json-stream';
-const Readable = require('stream').Readable;
 
 const template = {
     "apiVersion": "v1",
@@ -18,10 +18,9 @@ const template = {
     }
 };
 
-var fixture;
-var logger;
-var node;
-var icinga;
+var fixture: any;
+var logger: LoggerInterface;
+var icinga: any;
 
 beforeEach(() => {
   fixture = JSON.parse(JSON.stringify(template));
@@ -34,7 +33,7 @@ beforeEach(() => {
 
 describe('kubernetes nodes', () => {
   describe('nodes watch stream', () => {
-    var bindings; 
+    var bindings: any; 
     beforeEach(() => {
       bindings= {data:function(){}};
     });
@@ -46,15 +45,15 @@ describe('kubernetes nodes', () => {
         object: fixture
       };
       
-      instance.prepareObject = function(definition) {
+      instance.prepareObject = function(definition: any) {
         expect(definition).toEqual(resource.object);
         return new Promise((resolve,reject) => {
           resolve(true);
         });
       };
 
-      var json = {
-        on: function(name, callback) {
+      var json: any = {
+        on: function(name: string, callback: any) {
           bindings[name] = callback;
         }
       };
@@ -75,8 +74,8 @@ describe('kubernetes nodes', () => {
       
       instance.prepareObject = jest.fn();
 
-      var json = {
-        on: function(name, callback) {
+      var json: any = {
+        on: function(name: string, callback: any) {
           bindings[name] = callback;
         }
       };
@@ -99,8 +98,8 @@ describe('kubernetes nodes', () => {
 
       instance.prepareObject = jest.fn();
       
-      var json = {
-        on: function(name, callback) {
+      var json: any = {
+        on: function(name: string, callback: any) {
           bindings[name] = callback;
         }
       };
@@ -123,8 +122,8 @@ describe('kubernetes nodes', () => {
         object: fixture
       };
 
-      var json = {
-        on: function(name, callback) {
+      var json: any = {
+        on: function(name: string, callback: any) {
           bindings[name] = callback.bind(instance);
         }
       };
@@ -146,8 +145,8 @@ describe('kubernetes nodes', () => {
         object: fixture
       };
 
-      var json = {
-        on: function(name, callback) {
+      var json: any = {
+        on: function(name: string, callback: any) {
           bindings[name] = callback.bind(instance);
         }
       };

@@ -1,11 +1,13 @@
 import Service from '../../src/kube/service'; 
 import Logger from '../../src/logger'; 
+import {default as RealNode} from '../../src/kube/node';
+import {Logger as LoggerInterface} from 'winston';
 
 jest.mock('../../src/logger');
 var Node = (jest.genMockFromModule('../../src/kube/node') as any).default;
-var Icinga = (jest.genMockFromModule('../../src/icinga') as any).default;
+var Icinga = (jest.genMockFromModule('../../src/icinga') as any).Icinga;
 
-const template = {
+const template: any = {
     "apiVersion": "v1",
     "kind": "Service",
     "metadata": {
@@ -41,10 +43,10 @@ const template = {
     }
 };
 
-var fixture;
-var logger;
-var node;
-var icinga;
+var fixture: any;
+var logger: LoggerInterface;
+var node: RealNode;
+var icinga: any;
 
 beforeEach(() => {
   fixture = JSON.parse(JSON.stringify(template));
@@ -60,7 +62,7 @@ beforeEach(() => {
 
 describe('kubernetes services', () => {
   describe('service watch stream', () => {
-    var bindings;
+    var bindings: any;
     beforeEach(() => {
       bindings= {data:function(){}};
     });
@@ -77,8 +79,8 @@ describe('kubernetes services', () => {
         object: fixture
       };
       
-      var json = {
-        on: function(name, callback) {
+      var json: any = {
+        on: function(name: string, callback: any) {
           bindings[name] = callback;
         }
       };
@@ -103,8 +105,8 @@ describe('kubernetes services', () => {
         object: fixture
       };
       
-      var json = {
-        on: function(name, callback) {
+      var json: any = {
+        on: function(name: string, callback: any) {
           bindings[name] = callback;
         }
       };
@@ -130,15 +132,15 @@ describe('kubernetes services', () => {
         object: fixture
       };
       
-      icinga.deleteServicesByFilter = function(definition) {
+      icinga.deleteServicesByFilter = function(definition: any) {
         expect(definition).toEqual('service.vars.kubernetes.metadata.uid==\"xyz\"');
         return new Promise((resolve,reject) => {
           resolve(true);
         });
       };
 
-      var json = {
-        on: async function(name, callback) {
+      var json: any = {
+        on: async function(name: string, callback: any) {
           bindings[name] = callback;
         }
       };
@@ -163,15 +165,15 @@ describe('kubernetes services', () => {
         object: fixture
       };
 
-      icinga.deleteServicesByFilter = function(definition) {
+      icinga.deleteServicesByFilter = function(definition: any) {
         expect(definition).toEqual('service.vars.kubernetes.metadata.uid==\"xyz\"');
         return new Promise((resolve,reject) => {
           resolve(true);
         });
       };
 
-      var json = {
-        on: function(name, callback) {
+      var json: any = {
+        on: function(name: string, callback: any) {
           bindings[name] = callback.bind(instance);
         }
       };
@@ -197,8 +199,8 @@ describe('kubernetes services', () => {
         object: fixture
       };
 
-      var json = {
-        on: function(name, callback) {
+      var json: any = {
+        on: function(name: string, callback: any) {
           bindings[name] = callback.bind(instance);
         }
       };
@@ -224,8 +226,8 @@ describe('kubernetes services', () => {
         object: fixture
       };
 
-      var json = {
-        on: function(name, callback) {
+      var json: any = {
+        on: function(name: string, callback: any) {
           bindings[name] = callback.bind(instance);
         }
       };
@@ -251,8 +253,8 @@ describe('kubernetes services', () => {
         object: fixture
       };
 
-      var json = {
-        on: function(name, callback) {
+      var json: any = {
+        on: function(name: string, callback: any) {
           bindings[name] = callback.bind(instance);
         }
       };
@@ -358,7 +360,6 @@ describe('kubernetes services', () => {
       });
 
       instance.prepareObject(fixture);  
-      const call = icinga.applyServiceGroup.mock.instances[0];
       expect(icinga.applyServiceGroup.mock.instances.length).toBe(0);
     });
   });

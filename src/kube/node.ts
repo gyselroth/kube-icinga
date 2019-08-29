@@ -21,15 +21,15 @@ const DefaultOptions: NodeOptions = {
 export default class Node extends Resource {
   protected icinga: Icinga;
   protected nodes: string[] = [];
-  protected options = DefaultOptions;
+  protected options: NodeOptions = DefaultOptions;
 
   /**
    * kubernetes hosts
    */
-  constructor(logger: Logger, icinga: Icinga, options: NodeOptions = DefaultOptions) {
+  constructor(logger: Logger, icinga: Icinga, options: any = DefaultOptions) {
     super(logger);
     this.icinga = icinga;
-    this.options = Object.assign(this.options, options);
+    this.options = Object.assign({}, this.options, options);
   }
 
   /**

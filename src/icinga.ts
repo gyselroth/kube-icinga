@@ -134,7 +134,7 @@ export class Icinga {
   /**
    * Create or update a new icinga host object
    */
-  public applyHost(name: string, definition: IcingaObject, templates: string[]=[]): Promise<boolean> {
+  public applyHost(name: string, definition: IcingaObject={}, templates: string[]=[]): Promise<boolean> {
     let host = {
       attrs: definition,
       templates: templates,
@@ -171,7 +171,7 @@ export class Icinga {
   /**
    * Create or update an icinga service object
    */
-  public applyService(host: string, name: string, definition: IcingaObject, templates: string[]=[]): Promise<boolean> {
+  public applyService(host: string, name: string, definition: IcingaObject={}, templates: string[]=[]): Promise<boolean> {
     let service = {
       attrs: definition,
       templates: templates,

@@ -1,11 +1,13 @@
 import Ingress from '../../src/kube/ingress'; 
+import {default as RealNode} from '../../src/kube/node'; 
 import Logger from '../../src/logger'; 
+import {Logger as LoggerInterface} from 'winston';
 
 jest.mock('../../src/logger');
 var Node = (jest.genMockFromModule('../../src/kube/node') as any).default;
-var Icinga = (jest.genMockFromModule('../../src/icinga') as any).default;
+var Icinga = (jest.genMockFromModule('../../src/icinga') as any).Icinga;
 
-const template = {
+const template: any = {
     "apiVersion": "extensions/v1beta1",
     "kind": "Ingress",
     "metadata": {
@@ -50,26 +52,27 @@ const template = {
     }
 };
 
-var fixture;
-var logger;
-var node;
-var icinga;
+var fixture: any;
+var logger: LoggerInterface;
+var node: RealNode;
+var icinga: any;
 
 beforeEach(() => {
   fixture = JSON.parse(JSON.stringify(template));
 
+  jest.resetAllMocks();
   Node.mockClear();
   node = new Node();
   
   logger = Logger;
   
-  Icinga.mockClear();
+  Icinga.mockReset();
   icinga = new Icinga();
 });
 
 describe('kubernetes ingresses', () => {
   describe('ingress watch stream', () => {
-    var bindings; 
+    var bindings: any; 
     beforeEach(() => {
       bindings= {data:function(){}};
     });
@@ -81,8 +84,8 @@ describe('kubernetes ingresses', () => {
         object: fixture
       };
       
-      var json = {
-        on: function(name, callback) {
+      var json: any = {
+        on: function(name: string, callback: any) {
           bindings[name] = callback;
         }
       };
@@ -103,15 +106,15 @@ describe('kubernetes ingresses', () => {
         object: fixture
       };
       
-      icinga.deleteServicesByFilter = function(definition) {
+      icinga.deleteServicesByFilter = function(definition: any) {
         expect(definition).toEqual('service.vars.kubernetes.metadata.uid==\"xyz\"');
         return new Promise((resolve,reject) => {
           resolve(true);
         });
       };
 
-      var json = {
-        on: async function(name, callback) {
+      var json: any = {
+        on: async function(name: string, callback: any) {
           bindings[name] = callback;
         }
       };
@@ -134,15 +137,15 @@ describe('kubernetes ingresses', () => {
         object: fixture
       };
       
-      icinga.deleteHost = function(name) {
+      icinga.deleteHost = function(name: string) {
         expect(name).toEqual('ingress-foobar-foo');
         return new Promise((resolve,reject) => {
           resolve(true);
         });
       };
 
-      var json = {
-        on: async function(name, callback) {
+      var json: any = {
+        on: async function(name: string, callback: any) {
           bindings[name] = callback;
         }
       };
@@ -164,15 +167,15 @@ describe('kubernetes ingresses', () => {
         object: fixture
       };
 
-      icinga.deleteServicesByFilter = function(definition) {
+      icinga.deleteServicesByFilter = function(definition: any) {
         expect(definition).toEqual('service.vars.kubernetes.metadata.uid==\"xyz\"');
         return new Promise((resolve,reject) => {
           resolve(true);
         });
       };
 
-      var json = {
-        on: function(name, callback) {
+      var json: any = {
+        on: function(name: string, callback: any) {
           bindings[name] = callback.bind(instance);
         }
       };
@@ -194,8 +197,8 @@ describe('kubernetes ingresses', () => {
         object: fixture
       };
 
-      var json = {
-        on: function(name, callback) {
+      var json: any = {
+        on: function(name: string, callback: any) {
           bindings[name] = callback.bind(instance);
         }
       };
@@ -217,8 +220,8 @@ describe('kubernetes ingresses', () => {
         object: fixture
       };
 
-      var json = {
-        on: function(name, callback) {
+      var json: any = {
+        on: function(name: string, callback: any) {
           bindings[name] = callback.bind(instance);
         }
       };
@@ -310,11 +313,10 @@ describe('kubernetes ingresses', () => {
       });
 
       instance.prepareObject(fixture);  
-      const call = icinga.applyServiceGroup.mock.instances[0];
       expect(icinga.applyServiceGroup.mock.instances.length).toBe(0);
     });
   });
-
+  
   describe('add all ingress object http path rules as service objects', () => {
     it('create all service objects', async () => {
       let instance = new Ingress(logger, node, icinga);
@@ -331,6 +333,7 @@ describe('kubernetes ingresses', () => {
     });
     
     it('create all service objects with dynamic hosts', async () => {
+      var icinga = new Icinga();
       let instance = new Ingress(logger, node, icinga, {
         hostName: null
       });
@@ -341,7 +344,7 @@ describe('kubernetes ingresses', () => {
       expect(calls[0][0]).toBe('ingress-foobar-foo');
       expect(calls[1][0]).toBe('ingress-foobar-foo');
     });
-
+    
     it('create all service objects with custom service definition', async () => {
       let instance = new Ingress(logger, node, icinga, {
         applyServices: true,
@@ -359,7 +362,7 @@ describe('kubernetes ingresses', () => {
       expect(calls[1][2].check_command).toBe('tcp');
       expect(calls[1][2]['vars.foo']).toBe('bar');
     });
-
+    
     it('create all service objects with templates', async () => {
       let instance = new Ingress(logger, node, icinga, {
         applyServices: true,
@@ -372,7 +375,7 @@ describe('kubernetes ingresses', () => {
       expect(calls[0][3]).toEqual(['foo', 'bar']);
       expect(calls[1][3]).toEqual(['foo', 'bar']);
     });
-
+    
     it('create service objects for tls enabled ingresses', async () => {
       let instance = new Ingress(logger, node, icinga, {
         applyServices: true,
@@ -390,7 +393,7 @@ describe('kubernetes ingresses', () => {
       expect(calls[1][1]).toBe('foobar.example.org-https--');
       expect(calls[1][2]['vars.http_ssl']).toBe(true);
     });
-
+    
     it('attach services to kube workers if attachToNodes is enabled', async () => {
       let instance = new Ingress(logger, node, icinga, {
         attachToNodes: true
@@ -414,7 +417,7 @@ describe('kubernetes ingresses', () => {
       expect(calls[1][1]).toBe('foobar.example.org-http--');
       expect(calls[2][1]).toBe('barfoo.example.org-http--foo');
       expect(calls[3][1]).toBe('barfoo.example.org-http--foo');
-    });     
+    });  
   });
 
   describe('kubernetes annotations', () => {
@@ -425,7 +428,7 @@ describe('kubernetes ingresses', () => {
 
       fixture.metadata.annotations['kube-icinga/check_command'] = 'bar';
       fixture.metadata.annotations['kube-icinga/templates'] = 'foobar,barfoo';
-
+      
       await instance.prepareObject(fixture);
       const calls = icinga.applyService.mock.calls;
       expect(icinga.applyService.mock.instances.length).toBe(2);
@@ -450,7 +453,7 @@ describe('kubernetes ingresses', () => {
       expect(calls[0][2].check_command).toBe('bar');
       expect(calls[1][2].check_command).toBe('bar');
     });
-
+  
     it('definiton merge', async () => {
       let instance = new Ingress(logger, node, icinga, {
         applyServices: true,

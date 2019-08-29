@@ -35,17 +35,17 @@ const DefaultOptions: IngressOptions = {
 export default class Ingress extends AbstractResource {
   protected icinga: Icinga;
   protected kubeNode: KubeNode;
-  protected options = DefaultOptions;
+  protected options: IngressOptions = DefaultOptions;
 
   /**
    * kubernetes hosts
    */
-  constructor(logger: Logger, kubeNode: KubeNode, icinga: Icinga, options: IngressOptions = DefaultOptions) {
+  constructor(logger: Logger, kubeNode: KubeNode, icinga: Icinga, options: any = DefaultOptions) {
     super(logger);
     this.logger = logger;
     this.icinga = icinga;
     this.kubeNode = kubeNode;
-    this.options = Object.assign(this.options, options);
+    this.options = Object.assign({}, this.options, options);
   }
 
   /**
@@ -138,8 +138,10 @@ export default class Ingress extends AbstractResource {
    * Get hostname
    */
   protected getHostname(definition: KubeIngress): string {
-    if (definition.metadata!.annotations!['kube-icinga/host']) {
-      return definition.metadata!.annotations!['kube-icinga/host'];
+    let annotations = this.getAnnotations(definition);
+
+    if (annotations['kube-icinga/host']) {
+      return annotations['kube-icinga/host'];
     } else if (this.options.hostName === null) {
       return this.escapeName(['ingress', definition.metadata!.namespace, definition.metadata!.name].join('-'));
     }

@@ -35,17 +35,17 @@ const DefaultOptions: VolumeOptions = {
 export default class Volume extends AbstractResource {
   protected icinga: Icinga;
   protected kubeNode: KubeNode;
-  protected options = DefaultOptions;
+  protected options: VolumeOptions = DefaultOptions;
 
   /**
    * kubernetes hosts
    */
-  constructor(logger: Logger, kubeNode: KubeNode, icinga: Icinga, options: VolumeOptions = DefaultOptions) {
+  constructor(logger: Logger, kubeNode: KubeNode, icinga: Icinga, options: any = DefaultOptions) {
     super(logger);
     this.logger = logger;
     this.icinga = icinga;
     this.kubeNode = kubeNode;
-    this.options = Object.assign(this.options, options);
+    this.options = Object.assign({}, this.options, options);
   }
 
   /**
@@ -125,8 +125,10 @@ export default class Volume extends AbstractResource {
    * Get hostname
    */
   protected getHostname(definition: PersistentVolume): string {
-    if (definition.metadata!.annotations!['kube-icinga/host']) {
-      return definition.metadata!.annotations!['kube-icinga/host'];
+    let annotations = this.getAnnotations(definition);
+
+    if (annotations['kube-icinga/host']) {
+      return annotations['kube-icinga/host'];
     } else if (this.options.hostName === null) {
       return this.escapeName(['volume', definition.metadata!.name].join('-'));
     }

@@ -9,6 +9,7 @@
 * [CHANGE] Upgrade to typescript 3.x / jest 24.x #22
 * [FIX] ClusterIP service check for UDP fails #20
 * [FIX] LoadBalancers services using node port instead of target port #21
+* [CHANGE] Enabled best pratcicts typescript compiler flags (strict, notnull, ..)
 
 
 ## 2.0.1

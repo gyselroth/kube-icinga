@@ -1,5 +1,4 @@
 import {Logger} from 'winston';
-import {Service as KubeService} from 'kubernetes-types/core/v1';
 
 /**
  * kubernetes hosts
@@ -7,6 +6,9 @@ import {Service as KubeService} from 'kubernetes-types/core/v1';
 export default abstract class Resource {
   protected logger: Logger;
 
+  /**
+   * Initialize kube handler with logger
+   */
   constructor(logger: Logger) {
     this.logger = logger;
   }
@@ -61,7 +63,7 @@ export default abstract class Resource {
   /**
    * Get annotations
    */
-  protected getAnnotations(definition: KubeService): { [key: string]: string } {
+  protected getAnnotations(definition: any): { [key: string]: string } {
     if (definition.metadata && definition.metadata.annotations) {
       return definition.metadata.annotations;
     }
@@ -109,6 +111,7 @@ export default abstract class Resource {
 
     if (object.type == 'ADDED' || object.type == 'MODIFIED') {
       this.prepareObject(object.object).catch((err) => {
+        console.log(err);
         this.logger.error('failed to handle resource', {error: err});
       });
     }

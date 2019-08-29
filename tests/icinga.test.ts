@@ -1,12 +1,12 @@
 import * as IcingaApi from 'icinga2-api';
-import IcingaClient from '../src/icinga';
+import {Icinga} from '../src/icinga';
 import Logger from '../src/logger';
 jest.mock('icinga2-api');
 jest.mock('../src/logger');
-var icinga;
+var icinga: any;
 
 beforeEach(() => {
-  icinga = new IcingaClient(Logger, IcingaApi);
+  icinga = new Icinga(Logger, IcingaApi);
 });
 
 describe('icinga', () => {
@@ -35,7 +35,7 @@ describe('icinga', () => {
       IcingaApi.getCheckCommand = jest.fn()
         .mockImplementation((command, cb) => cb({Statuscode: 500}, null));
 
-      var result = await expect(icinga.hasCheckCommand('foobar')).rejects.toEqual({
+      await expect(icinga.hasCheckCommand('foobar')).rejects.toEqual({
         Statuscode: 500
       }); 
 
@@ -246,7 +246,7 @@ describe('icinga', () => {
         .mockImplementation((cb) => cb(null, {foo: "bar"}));
 
       jest.useFakeTimers();
-      icinga = new IcingaClient(Logger, IcingaApi);
+      icinga = new Icinga(Logger, IcingaApi);
 
       IcingaApi.createHostCustom = jest.fn()
         .mockImplementation((data, name, cb) => cb(null, {foo: "bar"}));

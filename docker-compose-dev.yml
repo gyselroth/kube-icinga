@@ -8,14 +8,9 @@ services:
     hostname: icinga2
     environment:
       - MYSQL_ROOT_PASSWORD=<password>
-      - ICINGA2_FEATURE_GRAPHITE=1
       # Important:
       # keep the hostname graphite the same as
       # the name of the graphite docker-container
-      - ICINGA2_FEATURE_GRAPHITE_HOST=graphite
-      - ICINGA2_FEATURE_GRAPHITE_PORT=2003
-      - ICINGA2_FEATURE_GRAPHITE_URL=http://graphite
-      #- ICINGAWEB2_ADMIN_USER=icingaadmin
       #- ICINGAWEB2_ADMIN_PASS=icinga
       #- ICINGA2_USER_FULLNAME=Icinga2 Docker Monitoring Instance
       - DEFAULT_MYSQL_HOST=mysql
@@ -39,19 +34,9 @@ services:
       #- ./ssmtp/revaliases:/etc/ssmtp/revaliases:ro
       #- ./ssmtp/ssmtp.conf:/etc/ssmtp/ssmtp.conf:ro
     ports:
-      - "80:80"
+      - "81:80"
       - "443:443"
       - "5665:5665"
-  graphite:
-    image: graphiteapp/graphite-statsd:latest
-    container_name: graphite
-    restart: on-failure:5
-    hostname: graphite
-    volumes:
-      - ./data/graphite/conf:/opt/graphite/conf
-      - ./data/graphite/storage:/opt/graphite/storage
-      - ./data/graphite/log/graphite:/var/log/graphite
-      - ./data/graphite/log/carbon:/var/log/carbon
   mysql:
     image: mariadb:10.1
     environment:
