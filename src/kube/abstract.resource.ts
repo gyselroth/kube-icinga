@@ -1,4 +1,5 @@
 import {Logger} from 'winston';
+import {IcingaObject} from '../icinga';
 
 /**
  * kubernetes hosts
@@ -23,14 +24,9 @@ export default abstract class Resource {
   /**
    * Prepare icinga object with kube annotations
    */
-  protected prepareResource(resource: any): any {
-    let definition: any = {};
-
-    if (!resource.metadata.annotations) {
-      return definition;
-    }
-
-    let annotations = resource.metadata.annotations;
+  protected prepareResource(resource: any): IcingaObject {
+    let definition: IcingaObject = {};
+    let annotations = this.getAnnotations(resource);
 
     if (annotations['kube-icinga/check_command']) {
       definition.check_command = annotations['kube-icinga/check_command'];
@@ -47,11 +43,7 @@ export default abstract class Resource {
    * Prepare icinga object with kube annotations
    */
   protected prepareTemplates(resource: any): string[] {
-    if (!resource.metadata.annotations) {
-      return [];
-    }
-
-    let annotations: any = resource.metadata.annotations;
+    let annotations = this.getAnnotations(resource);
 
     if (annotations['kube-icinga/templates']) {
       return annotations['kube-icinga/templates'].split(',');
@@ -111,7 +103,6 @@ export default abstract class Resource {
 
     if (object.type == 'ADDED' || object.type == 'MODIFIED') {
       this.prepareObject(object.object).catch((err) => {
-        console.log(err);
         this.logger.error('failed to handle resource', {error: err});
       });
     }

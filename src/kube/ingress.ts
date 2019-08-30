@@ -17,6 +17,11 @@ interface IngressOptions {
   serviceTemplates: string[];
 }
 
+interface WatchEvent {
+  type: string;
+  object: KubeIngress;
+}
+
 const DefaultOptions: IngressOptions = {
   discover: true,
   applyServices: true,
@@ -167,7 +172,7 @@ export default class Ingress extends AbstractResource {
   public async kubeListener(provider: providerStream) {
     try {
       let stream = provider();
-      stream.on('data', async (object: any) => {
+      stream.on('data', async (object: WatchEvent) => {
         this.logger.debug('received kubernetes ingress resource', {object});
         return this.handleResource('Ingress', object, this.options);
       });

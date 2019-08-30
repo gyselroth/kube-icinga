@@ -266,6 +266,29 @@ describe('kubernetes services', () => {
       var result = await bindings.data(resource);
       expect(result).toBe(false);  
     });
+
+    it('ignore unknown service in object preparation', async () => {
+      let instance = new Service(logger, node, icinga);
+      
+      fixture.spec.type = 'foobar';
+      var resource = {  
+        type: 'ADDED', 
+        object: fixture
+      };
+
+      var json: any = {
+        on: function(name: string, callback: any) {
+          bindings[name] = callback.bind(instance);
+        }
+      };
+    
+      await instance.kubeListener(() => {
+        return json;
+      });
+
+      var result = await bindings.data(resource);
+      expect(result).toBe(false);  
+    });
   });
 
   describe('add service object with dummy host', () => {
@@ -279,7 +302,7 @@ describe('kubernetes services', () => {
       instance.prepareObject(fixture);  
       const call = icinga.applyHost.mock.calls[0];
       expect(call[0]).toBe('kubernetes-clusterip-services');
-      expect(call[1].address).toBe('kubernetes-clusterip-services');
+      expect(call[1].address).toBe('10.99.24.32');
       expect(call[1].display_name).toBe('kubernetes-clusterip-services');
       expect(call[1].check_command).toBe('dummy');
     });
@@ -567,9 +590,49 @@ describe('kubernetes services', () => {
       expect(calls[1][2]['vars.tcp_address']).toBe('10.99.24.32');
       expect(calls[1][2]['vars.tcp_port']).toBe(10000);
     });
+    
+    it('skip unknown service type', async () => {
+      let instance = new Service(logger, node, icinga);
+      fixture.spec.type = 'foobar';
+      expect(instance.prepareObject(fixture)).rejects.toThrow('unknown service type provided');  
+    });
+     
+    it('skip empty metadata name', async () => {
+      let instance = new Service(logger, node, icinga);
+      delete fixture.metadata.name;
+      expect(instance.prepareObject(fixture)).rejects.toThrow('resource name/namespace in metadata is required');  
+    });  
+    
+    it('skip empty metadata namespace', async () => {
+      let instance = new Service(logger, node, icinga);
+      delete fixture.metadata.namespace;
+      expect(instance.prepareObject(fixture)).rejects.toThrow('resource name/namespace in metadata is required');  
+    });  
   });
 
   describe('kubernetes annotations', () => {
+    it('custom icinga host annotation', async () => {
+      let instance = new Service(logger, node, icinga, {
+        ClusterIP: {
+          applyServices: true
+        }  
+      });
+
+      fixture.metadata.annotations['kube-icinga/host'] = 'foobar';
+      icinga.hasCheckCommand.mockResolvedValue(true);
+
+      await instance.prepareObject(fixture);
+      expect(icinga.applyHost.mock.instances.length).toBe(1);
+      const call = icinga.applyHost.mock.calls[0];
+      expect(call[0]).toBe('foobar');
+      expect(call[1].address).toBe('10.99.24.32');
+      
+      const calls = icinga.applyService.mock.calls;
+      expect(icinga.applyService.mock.instances.length).toBe(2);
+      expect(calls[0][2]['host_name']).toBe('foobar');
+      expect(calls[1][2]['host_name']).toBe('foobar');
+    });
+    
     it('check_command/templates annotation', async () => {
       let instance = new Service(logger, node, icinga, {
         ClusterIP: {

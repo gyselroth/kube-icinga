@@ -6,7 +6,7 @@ import {providerStream} from '../client/kube';
 import {Service as KubeService} from 'kubernetes-types/core/v1';
 
 interface ServiceTypeOptions {
-  discover?: boolean;
+  discover: boolean;
   hostName?: string;
   applyServices?: boolean;
   hostDefinition?: any;
@@ -53,6 +53,11 @@ const DefaultOptions: ServiceOptions = {
   },
 };
 
+interface WatchEvent {
+  type: string;
+  object: KubeService;
+}
+
 const TYPE_CLUSTERIP = 'ClusterIP';
 const TYPE_NODEPORT = 'NodePort';
 const TYPE_LOADBALANCER = 'LoadBalancer';
@@ -93,7 +98,6 @@ export default class Service extends AbstractResource {
    */
   protected async applyHost(name: string, address: string, type: string, metadata: KubeService, templates: string[]): Promise<boolean> {
     let definition: IcingaObject = {
-
       'display_name': name,
       'address': address,
       'check_command': 'dummy',
@@ -119,23 +123,20 @@ export default class Service extends AbstractResource {
       this.icinga.applyService(host, name, definition, templates);
     }
   }
-
+  
   /**
    * Prepare icinga object and apply
    */
   public async prepareObject(definition: KubeService): Promise<any> {
     let serviceType = this.getServiceType(definition);
 
-    if (!definition.metadata || !definition.metadata.name) {
-      throw new Error('resource name in metadata is required');
+    if(!definition.metadata || !definition.metadata.name || !definition.metadata.namespace) {
+      throw new Error('resource name/namespace in metadata is required');
     }
 
     let options = this.getServiceDefinition(serviceType);
     let service = JSON.parse(JSON.stringify(options.serviceDefinition));
-
-    if (definition.metadata && definition.metadata.namespace) {
-      service['groups'] = [definition.metadata.namespace];
-    }
+    service['groups'] = [definition.metadata.namespace];
 
     Object.assign(service, this.prepareResource(definition));
 
@@ -144,14 +145,12 @@ export default class Service extends AbstractResource {
     templates = templates.concat(this.prepareTemplates(definition));
 
     if (serviceType !== TYPE_NODEPORT) {
-      let address = options.hostName || this.getServiceAddress(definition);
+      let address = this.getServiceAddress(definition);
       await this.applyHost(hostname, address, serviceType, definition, options.hostTemplates);
     }
 
     if (options.applyServices) {
-      if (definition.metadata && definition.metadata.namespace) {
-        await this.icinga.applyServiceGroup(definition.metadata.namespace, Object.assign({'vars._kubernetes': true}, options.serviceGroupDefinition));
-      }
+      await this.icinga.applyServiceGroup(definition.metadata.namespace, Object.assign({'vars._kubernetes': true}, options.serviceGroupDefinition));
 
       for (const servicePort of ((definition.spec || {}).ports || [])) {
         let port = JSON.parse(JSON.stringify(service));
@@ -286,7 +285,7 @@ export default class Service extends AbstractResource {
   public async kubeListener(provider: providerStream) {
     try {
       let stream = provider();
-      stream.on('data', async (object: any) => {
+      stream.on('data', async (object: WatchEvent) => {
         this.logger.debug('received kubernetes service resource', {object});
 
         if (this.getServiceAddress(object.object) === HEADLESS_ADDRESS) {
@@ -294,7 +293,16 @@ export default class Service extends AbstractResource {
           return false;
         }
 
-        return this.handleResource('Service', object, this.options[this.getServiceType(object.object)]);
+        let options = {};
+
+        try {
+          options = this.getServiceDefinition(this.getServiceType(object.object));  
+        } catch(e) {
+          this.logger.warn('skip invalid service type', {object: object, err: e})
+          return false;  
+        }
+
+        return this.handleResource('Service', object, options);
       });
 
       stream.on('finish', () => {

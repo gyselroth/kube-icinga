@@ -17,6 +17,11 @@ interface VolumeOptions {
   serviceTemplates: string[];
 }
 
+interface WatchEvent {
+  type: string;
+  object: PersistentVolume;
+}
+
 const DefaultOptions: VolumeOptions = {
   discover: true,
   applyServices: true,
@@ -129,8 +134,8 @@ export default class Volume extends AbstractResource {
 
     if (annotations['kube-icinga/host']) {
       return annotations['kube-icinga/host'];
-    } else if (this.options.hostName === null) {
-      return this.escapeName(['volume', definition.metadata!.name].join('-'));
+    } else if (this.options.hostName === null && definition.metadata && definition.metadata.name) {
+      return this.escapeName(['volume', definition.metadata.name].join('-'));
     }
 
     return this.options.hostName;
@@ -154,7 +159,7 @@ export default class Volume extends AbstractResource {
   public async kubeListener(provider: providerStream) {
     try {
       let stream = provider();
-      stream.on('data', async (object: any) => {
+      stream.on('data', async (object: WatchEvent) => {
         this.logger.debug('received kubernetes persistent volume resource', {object});
         return this.handleResource('PersistentVolume', object, this.options);
       });
