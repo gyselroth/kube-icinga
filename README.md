@@ -72,7 +72,7 @@ attached to a single host named `kubernetes-${serviceType}-services`. Supported 
 Like ingresses you may change the hostname or configure host provisioning by setting hostName to `false` (`kubernetes.services.${serviceType}.hostName`).
 Dynamic service host objects get named `service-${namespace}-${name}`. You may also disable service provisioning by setting `kubernetes.services.${serviceType}.applyServices` to `false` if you prefer icinga apply rules.
 ClusterIP provisioning is disabled by default since ClusterIP services are only visible internally in kubernetes. You need either an icinga deployment within the kubernetes cluster or optionally 
-an icinga [satelite](https://www.icinga.com/docs/icinga2/latest/doc/06-distributed-monitoring) if you decide to enable ClusterIP provisioning.
+an icinga [satellite](https://www.icinga.com/docs/icinga2/latest/doc/06-distributed-monitoring) if you decide to enable ClusterIP provisioning.
 NodePort services get attached by default directly to the kubernetes icinga node objects.
 
 By default services get checked with the service protocol which usually result in check_tcp. However you may set custom settings using annotations (or global service settings). 
